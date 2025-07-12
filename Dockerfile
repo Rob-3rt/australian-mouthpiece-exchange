@@ -2,22 +2,21 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy backend package files first
 COPY backend/package*.json ./backend/
 
-# Install dependencies
+# Install backend dependencies
+WORKDIR /app/backend
 RUN npm install
-RUN cd backend && npm install
-
-# Copy source code
-COPY . .
 
 # Generate Prisma client
-RUN cd backend && npx prisma generate
+RUN npx prisma generate
+
+# Copy the rest of the backend code
+COPY backend/ ./
 
 # Expose port
 EXPOSE 4000
 
 # Start the application
-CMD ["sh", "-c", "cd backend && npm start"] 
+CMD ["npm", "start"] 
