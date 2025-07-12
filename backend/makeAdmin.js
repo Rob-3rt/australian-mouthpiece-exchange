@@ -1,13 +1,55 @@
 const { PrismaClient } = require('./generated/prisma');
+require('dotenv').config();
+
 const prisma = new PrismaClient();
 
-async function makeAdmin(email) {
+async function makeAdmin() {
   try {
-    const user = await prisma.user.update({
+    const email = 'robmaher@outlook.com.au';
+    
+    console.log(`Looking for user with email: ${email}`);
+    
+    // Find the user
+    const user = await prisma.user.findUnique({
       where: { email },
-      data: { is_admin: true }
+      select: {
+        user_id: true,
+        email: true,
+        name: true,
+        is_admin: true
+      }
     });
-    console.log(`User ${user.name} (${user.email}) is now an admin!`);
+    
+    if (!user) {
+      console.log('User not found. Please check the email address.');
+      return;
+    }
+    
+    console.log(`Found user: ${user.name} (${user.email})`);
+    console.log(`Current admin status: ${user.is_admin ? 'Admin' : 'Not Admin'}`);
+    
+    if (user.is_admin) {
+      console.log('User is already an admin!');
+      return;
+    }
+    
+    // Update user to admin
+    const updatedUser = await prisma.user.update({
+      where: { user_id: user.user_id },
+      data: { is_admin: true },
+      select: {
+        user_id: true,
+        email: true,
+        name: true,
+        is_admin: true
+      }
+    });
+    
+    console.log(`✅ Successfully made ${updatedUser.name} an admin!`);
+    console.log(`User ID: ${updatedUser.user_id}`);
+    console.log(`Email: ${updatedUser.email}`);
+    console.log(`Admin status: ${updatedUser.is_admin ? 'Admin' : 'Not Admin'}`);
+    
   } catch (error) {
     console.error('Error making user admin:', error);
   } finally {
@@ -15,11 +57,4 @@ async function makeAdmin(email) {
   }
 }
 
-// Get email from command line argument
-const email = process.argv[2];
-if (!email) {
-  console.log('Usage: node makeAdmin.js <email>');
-  process.exit(1);
-}
-
-makeAdmin(email); 
+makeAdmin(); 
