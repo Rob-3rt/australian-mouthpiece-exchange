@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id           Int           @id @default(autoincrement())
+  name              String
+  nickname          String?
+  email             String        @unique
+  password_hash     String
+  email_verified    Boolean       @default(false)
+  join_date         DateTime      @default(now())
+  status            String        @default("active") // active, deactivated, banned
+  paypal_link       String?       // PayPal.Me URL or PayPal email (validated in API)
+  location_state    String
+  location_postcode String
+  average_rating    Float?        @default(0)
+  rating_count      Int?          @default(0)
+  listings          Listing[]
+  ratings_given     PeerRating[]  @relation("RatingsGiven")
+  ratings_received  PeerRating[]  @relation("RatingsReceived")
+  messages_sent     Message[]     @relation("MessagesSent")
+  messages_received Message[]     @relation("MessagesReceived")
+  flagged_reports   FlaggedContent[] @relation("FlagsReported")
+  is_admin          Boolean        @default(false)
+}
+
+model PeerRating {
+  rating_id      Int      @id @default(autoincrement())
+  from_user_id   Int
+  to_user_id     Int
+  transaction_id Int
+  stars          Int
+  comment        String
+  timestamp      DateTime @default(now())
+  published      Boolean  @default(false) // For moderation
+  reviewed       Boolean  @default(false) // For moderation
+  from_user      User     @relation("RatingsGiven", fields: [from_user_id], references: [user_id])
+  to_user        User     @relation("RatingsReceived", fields: [to_user_id], references: [user_id])
+}
+
+model Listing {
+  listing_id       Int      @id @default(autoincrement())
+  user_id          Int
+  instrument_type  String
+  brand            String
+  model            String
+  condition        String
+  price            Float
+  description      String
+  photos           String[] // Store as array of file paths or URLs
+  open_to_swap     Boolean  @default(false)
+  status           String   @default("active") // active, paused, deleted
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  paypal_link_override String? // Optional: per-listing PayPal.Me URL or email (validated in API)
+  user             User     @relation(fields: [user_id], references: [user_id])
+  messages         Message[]
+}
+
+model Message {
+  message_id    Int      @id @default(autoincrement())
+  from_user_id  Int
+  to_user_id    Int
+  content       String
+  timestamp     DateTime @default(now())
+  read          Boolean  @default(false)
+  flagged       Boolean  @default(false)
+  reviewed      Boolean  @default(false)
+  listing_id    Int?     // NEW: optional, links to Listing
+  from_user     User     @relation("MessagesSent", fields: [from_user_id], references: [user_id])
+  to_user       User     @relation("MessagesReceived", fields: [to_user_id], references: [user_id])
+  listing       Listing? @relation(fields: [listing_id], references: [listing_id])
+}
+
+model FlaggedContent {
+  flag_id      Int      @id @default(autoincrement())
+  content_type String   // 'listing' or 'message'
+  content_id   Int
+  reporter_id  Int
+  reason       String
+  status       String   @default("pending") // pending, reviewed, resolved
+  timestamp    DateTime @default(now())
+  notes        String?  // Admin notes
+  reporter     User     @relation("FlagsReported", fields: [reporter_id], references: [user_id])
+}

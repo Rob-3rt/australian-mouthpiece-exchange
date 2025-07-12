@@ -1,0 +1,232 @@
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
+import { useAuth } from './AuthContext';
+import { Snackbar, Alert, Badge, IconButton, Menu, MenuItem, Typography, Box, Divider } from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+
+const NotificationContext = createContext();
+
+export const useNotifications = () => {
+  const context = useContext(NotificationContext);
+  if (!context) {
+    throw new Error('useNotifications must be used within a NotificationProvider');
+  }
+  return context;
+};
+
+export const NotificationProvider = ({ children }) => {
+  const { user, token } = useAuth();
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+  const [anchorEl, setAnchorEl] = useState(null);
+  const socketRef = useRef(null);
+
+  // Connect to Socket.IO when user is authenticated
+  useEffect(() => {
+    if (user && token) {
+      try {
+        socketRef.current = io('http://localhost:4000', {
+          auth: { token },
+          timeout: 5000,
+          forceNew: true
+        });
+
+        socketRef.current.on('connect', () => {
+          console.log('Connected to notification service');
+        });
+
+        socketRef.current.on('connect_error', (error) => {
+          console.error('Socket connection error:', error);
+          // Don't disconnect on error, let it retry
+        });
+
+        socketRef.current.on('notification', (notification) => {
+          handleNewNotification(notification);
+        });
+
+        socketRef.current.on('new_message', (message) => {
+          handleNewMessage(message);
+        });
+
+        socketRef.current.on('disconnect', (reason) => {
+          console.log('Disconnected from notification service:', reason);
+        });
+
+        return () => {
+          if (socketRef.current) {
+            socketRef.current.disconnect();
+            socketRef.current = null;
+          }
+        };
+      } catch (error) {
+        console.error('Failed to initialize socket connection:', error);
+      }
+    } else {
+      // Clean up socket if user logs out
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    }
+  }, [user, token]);
+
+  const handleNewNotification = (notification) => {
+    setNotifications(prev => [notification, ...prev.slice(0, 9)]); // Keep last 10
+    setUnreadCount(prev => prev + 1);
+    
+    // Show snackbar for new messages
+    if (notification.type === 'new_message') {
+      const senderName = notification.message.from_user.nickname || notification.message.from_user.name;
+      setSnackbar({
+        open: true,
+        message: `New message from ${senderName}`,
+        severity: 'info'
+      });
+    }
+  };
+
+  const handleNewMessage = (message) => {
+    // This is for real-time message updates in conversations
+    // The actual notification is handled by handleNewNotification
+  };
+
+  const markAsRead = (notificationId) => {
+    setNotifications(prev => 
+      prev.map(n => 
+        n.id === notificationId ? { ...n, read: true } : n
+      )
+    );
+    setUnreadCount(prev => Math.max(0, prev - 1));
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const joinConversation = (conversationId) => {
+    if (socketRef.current) {
+      socketRef.current.emit('join-conversation', conversationId);
+    }
+  };
+
+  const leaveConversation = (conversationId) => {
+    if (socketRef.current) {
+      socketRef.current.emit('leave-conversation', conversationId);
+    }
+  };
+
+  const value = {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    clearNotifications,
+    joinConversation,
+    leaveConversation,
+    handleMenuOpen,
+    handleMenuClose,
+    anchorEl
+  };
+
+  return (
+    <NotificationContext.Provider value={value}>
+      {children}
+
+      {/* Notification Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          sx: { width: 320, maxHeight: 400 }
+        }}
+      >
+        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6">Notifications</Typography>
+          {unreadCount > 0 && (
+            <Typography 
+              variant="body2" 
+              color="primary" 
+              sx={{ cursor: 'pointer' }}
+              onClick={markAllAsRead}
+            >
+              Mark all read
+            </Typography>
+          )}
+        </Box>
+        <Divider />
+        {notifications.length === 0 ? (
+          <MenuItem disabled>
+            <Typography variant="body2" color="text.secondary">
+              No notifications
+            </Typography>
+          </MenuItem>
+        ) : (
+          notifications.map((notification, index) => (
+            <MenuItem 
+              key={index}
+              onClick={() => {
+                markAsRead(notification.id);
+                handleMenuClose();
+              }}
+              sx={{ 
+                display: 'block',
+                backgroundColor: notification.read ? 'transparent' : 'action.hover'
+              }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: notification.read ? 'normal' : 'bold' }}>
+                {notification.type === 'new_message' && (
+                  `New message from ${notification.message.from_user.nickname || notification.message.from_user.name}`
+                )}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {new Date(notification.message?.timestamp || Date.now()).toLocaleString()}
+              </Typography>
+            </MenuItem>
+          ))
+        )}
+        {notifications.length > 0 && (
+          <>
+            <Divider />
+            <MenuItem onClick={clearNotifications}>
+              <Typography variant="body2" color="error">
+                Clear all
+              </Typography>
+            </MenuItem>
+          </>
+        )}
+      </Menu>
+
+      {/* Snackbar for new notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </NotificationContext.Provider>
+  );
+}; 

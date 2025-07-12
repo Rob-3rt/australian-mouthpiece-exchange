@@ -1,0 +1,120 @@
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Circular', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #ffffff;
+  color: #222222;
+  line-height: 1.5;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Remove any conflicting styles */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Cadbury purple-inspired color variables */
+:root {
+  --cadbury-purple: #4a1d3f;
+  --cadbury-purple-hover: #3a162f;
+  --airbnb-dark: #222222;
+  --airbnb-light-gray: #f7f7f7;
+  --airbnb-gray: #717171;
+  --airbnb-light-text: #717171;
+  --airbnb-border: #dddddd;
+  --airbnb-white: #ffffff;
+  --airbnb-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+  --airbnb-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Ensure proper Material-UI integration */
+.MuiContainer-root {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (min-width: 600px) {
+  .MuiContainer-root {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+/* Airbnb-style button hover effects */
+.airbnb-button {
+  transition: all 0.2s ease-in-out;
+  border-radius: 8px;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.airbnb-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--airbnb-shadow-hover);
+}
+
+/* Airbnb-style card hover effects */
+.airbnb-card {
+  transition: all 0.2s ease-in-out;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--airbnb-border);
+}
+
+.airbnb-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--airbnb-shadow-hover);
+}
+
+/* Airbnb-style input fields */
+.airbnb-input {
+  border-radius: 8px;
+  border: 1px solid var(--airbnb-border);
+  transition: border-color 0.2s ease-in-out;
+}
+
+.airbnb-input:focus {
+  border-color: var(--airbnb-dark);
+  outline: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--airbnb-light-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--airbnb-gray);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--airbnb-dark);
+}

@@ -1,0 +1,209 @@
+import React, { useEffect, useState } from 'react';
+import { Typography, Box, Grid, Card, CardContent, CircularProgress, Container } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import api from '../api/axios';
+
+export default function Messages() {
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  const fetchConversations = async () => {
+    try {
+      const response = await api.get('/api/messages/conversations');
+      setConversations(response.data);
+    } catch (error) {
+      console.error('Failed to fetch conversations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConversationClick = (conversationId, listingId) => {
+    navigate(`/messages/${conversationId}${listingId ? `?listing=${listingId}` : ''}`);
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ 
+        backgroundColor: '#ffffff', 
+        minHeight: '100vh', 
+        py: { xs: 4, md: 6 },
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <CircularProgress sx={{ color: '#4a1d3f' }} />
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ 
+      backgroundColor: '#ffffff', 
+      minHeight: '100vh', 
+      py: { xs: 4, md: 6 }
+    }}>
+      <Container maxWidth="md">
+        {/* Header */}
+        <Box sx={{ mb: 4 }}>
+          <Typography 
+            variant="h3" 
+            sx={{ 
+              fontWeight: 700, 
+              color: '#222222', 
+              mb: 2,
+              letterSpacing: -0.5
+            }}
+          >
+            Messages
+          </Typography>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              color: '#717171',
+              fontSize: '18px'
+            }}
+          >
+            Your conversations with other users
+          </Typography>
+        </Box>
+
+        {conversations.length === 0 ? (
+          <Card sx={{ 
+            border: '1px solid #dddddd',
+            borderRadius: '16px',
+            boxShadow: '0 2px 16px rgba(0, 0, 0, 0.08)',
+            overflow: 'hidden'
+          }}>
+            <CardContent sx={{ 
+              p: { xs: 4, md: 6 },
+              textAlign: 'center'
+            }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: '#717171',
+                  mb: 2
+                }}
+              >
+                No conversations yet
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#717171'
+                }}
+              >
+                Start browsing listings to connect with sellers
+              </Typography>
+            </CardContent>
+          </Card>
+        ) : (
+          <Grid container spacing={2}>
+            {conversations.map(conv => (
+              <Grid item xs={12} key={conv.conversation_id + '_' + (conv.listing_id || 'none')}>
+                <Card 
+                  sx={{ 
+                    border: '1px solid #dddddd',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    transition: 'all 0.2s ease-in-out',
+                    cursor: 'pointer',
+                    '&:hover': { 
+                      transform: 'translateY(-2px)', 
+                      boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
+                      borderColor: '#222222'
+                    }
+                  }}
+                  onClick={() => handleConversationClick(conv.conversation_id, conv.listing_id)}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      {conv.listing_photo && (
+                        <Box sx={{ 
+                          width: 64, 
+                          height: 64, 
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          flexShrink: 0
+                        }}>
+                          <img 
+                            src={conv.listing_photo} 
+                            alt="Listing thumbnail" 
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover' 
+                            }} 
+                          />
+                        </Box>
+                      )}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography 
+                          variant="subtitle1" 
+                          sx={{ 
+                            fontWeight: 600,
+                            color: '#222222',
+                            mb: 0.5,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {conv.other_user ? (conv.other_user.nickname || conv.other_user.name) : 'Unknown User'}
+                        </Typography>
+                        {conv.listing_brand && conv.listing_model && (
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              color: '#4a1d3f',
+                              fontWeight: 500,
+                              mb: 0.5,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {conv.listing_brand} {conv.listing_model}
+                          </Typography>
+                        )}
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: '#717171',
+                            mb: 0.5,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {conv.last_message_preview}
+                        </Typography>
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            color: '#717171',
+                            fontSize: '12px'
+                          }}
+                        >
+                          {new Date(conv.updated_at).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Container>
+    </Box>
+  );
+} 
