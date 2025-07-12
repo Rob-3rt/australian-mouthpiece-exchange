@@ -127,6 +127,34 @@ router.patch('/users/:id/verify-email', async (req, res) => {
   }
 });
 
+// Toggle admin status
+router.patch('/users/:id/admin', async (req, res) => {
+  try {
+    const { is_admin } = req.body;
+    const userId = parseInt(req.params.id);
+    
+    // Don't allow admin to remove their own admin status
+    if (userId === req.user.userId && !is_admin) {
+      return res.status(400).json({ error: 'Cannot remove your own admin status.' });
+    }
+    
+    const user = await prisma.user.update({
+      where: { user_id: userId },
+      data: { is_admin },
+      select: {
+        user_id: true,
+        email: true,
+        is_admin: true
+      }
+    });
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Error updating admin status:', error);
+    res.status(500).json({ error: 'Failed to update admin status.' });
+  }
+});
+
 // Delete user
 router.delete('/users/:id', async (req, res) => {
   try {

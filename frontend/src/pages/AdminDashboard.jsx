@@ -24,7 +24,8 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  MenuItem
+  MenuItem,
+  Tooltip
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FlagIcon from '@mui/icons-material/Flag';
@@ -132,6 +133,22 @@ export default function AdminDashboard() {
       fetchData();
     } catch (error) {
       setSnackbar({ open: true, message: 'Failed to update email verification', severity: 'error' });
+    }
+  };
+
+  const handleToggleAdmin = async (userId, currentStatus) => {
+    try {
+      await api.patch(`/api/admin/users/${userId}/admin`, { 
+        is_admin: !currentStatus 
+      });
+      setSnackbar({ 
+        open: true, 
+        message: `Admin status ${!currentStatus ? 'enabled' : 'disabled'}`, 
+        severity: 'success' 
+      });
+      fetchData();
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Failed to update admin status', severity: 'error' });
     }
   };
 
@@ -610,11 +627,20 @@ export default function AdminDashboard() {
                           </IconButton>
                         </TableCell>
                         <TableCell>
-                          <Chip
-                            label={user.is_admin ? 'Admin' : 'User'}
-                            color={user.is_admin ? 'primary' : 'default'}
-                            size="small"
-                          />
+                          <Tooltip title={`Click to ${user.is_admin ? 'remove' : 'grant'} admin status`}>
+                            <Chip
+                              label={user.is_admin ? 'Admin' : 'User'}
+                              color={user.is_admin ? 'primary' : 'default'}
+                              size="small"
+                              onClick={() => handleToggleAdmin(user.user_id, user.is_admin)}
+                              sx={{ 
+                                cursor: 'pointer',
+                                '&:hover': {
+                                  opacity: 0.8
+                                }
+                              }}
+                            />
+                          </Tooltip>
                         </TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', gap: 1 }}>
