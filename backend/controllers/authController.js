@@ -59,7 +59,7 @@ exports.register = async (req, res) => {
         location_state,
         location_postcode,
         nickname,
-        email_verified: true, // Auto-verify for development
+        email_verified: false, // Require email verification
         status: 'active',
       },
     });
@@ -67,11 +67,18 @@ exports.register = async (req, res) => {
     // Try to send verification email, but don't fail if email config is missing
     try {
       await sendVerificationEmail(user, req);
+      console.log('Verification email sent successfully to:', user.email);
     } catch (emailError) {
       console.log('Email verification skipped (email not configured):', emailError.message);
+      // For development/testing, log the verification URL
+      const token = jwt.sign({ userId: user.user_id }, config.jwtSecret, { expiresIn: '1d' });
+      const verifyUrl = `${req.protocol}://${req.get('host')}/api/auth/verify-email?token=${token}`;
+      console.log('Verification URL for testing:', verifyUrl);
     }
     
-    res.status(201).json({ message: 'Registration successful!' });
+    res.status(201).json({ 
+      message: 'Registration successful! Please check your email to verify your account before logging in.' 
+    });
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ error: 'Registration failed.' });
@@ -93,10 +100,10 @@ exports.login = async (req, res) => {
     if (!valid) {
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
-    // Skip email verification check for development
-    // if (!user.email_verified) {
-    //   return res.status(403).json({ error: 'Email not verified.' });
-    // }
+    // Check if email is verified
+    if (!user.email_verified) {
+      return res.status(403).json({ error: 'Please verify your email before logging in. Check your inbox for a verification link.' });
+    }
     const token = jwt.sign({ userId: user.user_id }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
     res.json({ 
       token, 
