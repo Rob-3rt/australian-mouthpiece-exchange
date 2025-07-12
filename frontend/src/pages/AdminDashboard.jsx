@@ -10,10 +10,28 @@ import {
   Container,
   Snackbar,
   Alert,
-  Chip
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  MenuItem
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FlagIcon from '@mui/icons-material/Flag';
+import PersonIcon from '@mui/icons-material/Person';
+import EditIcon from '@mui/icons-material/Edit';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import api from '../api/axios.js';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -22,7 +40,10 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [flags, setFlags] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('flags'); // 'flags' or 'users'
+  const [editUserDialog, setEditUserDialog] = useState({ open: false, user: null });
   const navigate = useNavigate();
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
@@ -33,12 +54,14 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsRes, flagsRes] = await Promise.all([
+      const [statsRes, flagsRes, usersRes] = await Promise.all([
         api.get('/api/moderation/dashboard'),
-        api.get('/api/moderation/flags')
+        api.get('/api/moderation/flags'),
+        api.get('/api/admin/users')
       ]);
       setStats(statsRes.data);
       setFlags(flagsRes.data);
+      setUsers(usersRes.data);
     } catch (error) {
       console.error('Failed to fetch admin data:', error);
       setSnackbar({ open: true, message: 'Failed to load admin data', severity: 'error' });
@@ -66,6 +89,49 @@ export default function AdminDashboard() {
       fetchData();
     } catch (error) {
       setSnackbar({ open: true, message: 'Failed to delete flag', severity: 'error' });
+    }
+  };
+
+  // User management functions
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+    try {
+      await api.delete(`/api/admin/users/${userId}`);
+      setSnackbar({ open: true, message: 'User deleted successfully', severity: 'success' });
+      fetchData();
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Failed to delete user', severity: 'error' });
+    }
+  };
+
+  const handleEditUser = (user) => {
+    setEditUserDialog({ open: true, user });
+  };
+
+  const handleSaveUser = async (updatedUser) => {
+    try {
+      await api.put(`/api/admin/users/${updatedUser.user_id}`, updatedUser);
+      setSnackbar({ open: true, message: 'User updated successfully', severity: 'success' });
+      setEditUserDialog({ open: false, user: null });
+      fetchData();
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Failed to update user', severity: 'error' });
+    }
+  };
+
+  const handleToggleEmailVerification = async (userId, currentStatus) => {
+    try {
+      await api.patch(`/api/admin/users/${userId}/verify-email`, { 
+        email_verified: !currentStatus 
+      });
+      setSnackbar({ 
+        open: true, 
+        message: `Email verification ${!currentStatus ? 'enabled' : 'disabled'}`, 
+        severity: 'success' 
+      });
+      fetchData();
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Failed to update email verification', severity: 'error' });
     }
   };
 
@@ -234,18 +300,67 @@ export default function AdminDashboard() {
           </Grid>
         )}
 
-        {/* Flagged Listings */}
-        <Box>
-          <Typography 
-            variant="h4" 
-            sx={{ 
-              fontWeight: 700,
-              color: '#222222',
-              mb: 3
-            }}
-          >
-            Flagged Listings
-          </Typography>
+        {/* Tab Navigation */}
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ borderBottom: 1, borderColor: '#dddddd' }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                onClick={() => setActiveTab('flags')}
+                sx={{
+                  color: activeTab === 'flags' ? '#4a1d3f' : '#717171',
+                  borderBottom: activeTab === 'flags' ? '2px solid #4a1d3f' : '2px solid transparent',
+                  borderRadius: 0,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  py: 2,
+                  px: 3,
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                    color: '#4a1d3f'
+                  }
+                }}
+                startIcon={<FlagIcon />}
+              >
+                Flagged Content
+              </Button>
+              <Button
+                onClick={() => setActiveTab('users')}
+                sx={{
+                  color: activeTab === 'users' ? '#4a1d3f' : '#717171',
+                  borderBottom: activeTab === 'users' ? '2px solid #4a1d3f' : '2px solid transparent',
+                  borderRadius: 0,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  py: 2,
+                  px: 3,
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                    color: '#4a1d3f'
+                  }
+                }}
+                startIcon={<PersonIcon />}
+              >
+                User Management
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Content based on active tab */}
+        {activeTab === 'flags' && (
+          <Box>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700,
+                color: '#222222',
+                mb: 3
+              }}
+            >
+              Flagged Listings
+            </Typography>
           
           {flags.length === 0 ? (
             <Card sx={{ 
@@ -394,6 +509,221 @@ export default function AdminDashboard() {
             </Grid>
           )}
         </Box>
+        )}
+
+        {/* User Management Tab */}
+        {activeTab === 'users' && (
+          <Box>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700,
+                color: '#222222',
+                mb: 3
+              }}
+            >
+              User Management
+            </Typography>
+            
+            {users.length === 0 ? (
+              <Card sx={{ 
+                border: '1px solid #dddddd',
+                borderRadius: '16px',
+                boxShadow: '0 2px 16px rgba(0, 0, 0, 0.08)',
+                overflow: 'hidden'
+              }}>
+                <CardContent sx={{ 
+                  p: { xs: 4, md: 6 },
+                  textAlign: 'center'
+                }}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      color: '#717171',
+                      mb: 2
+                    }}
+                  >
+                    No users found
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: '#717171'
+                    }}
+                  >
+                    No users have been registered yet
+                  </Typography>
+                </CardContent>
+              </Card>
+            ) : (
+              <TableContainer component={Paper} sx={{ 
+                borderRadius: '12px',
+                border: '1px solid #dddddd',
+                overflow: 'hidden'
+              }}>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: '#f7f7f7' }}>
+                      <TableCell sx={{ fontWeight: 600 }}>User</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Location</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Verified</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Admin</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.user_id} sx={{ '&:hover': { backgroundColor: '#fafafa' } }}>
+                        <TableCell>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {user.name}
+                            </Typography>
+                            {user.nickname && (
+                              <Typography variant="caption" sx={{ color: '#717171' }}>
+                                @{user.nickname}
+                              </Typography>
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          {user.location_state}, {user.location_postcode}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={user.status}
+                            color={user.status === 'active' ? 'success' : 'default'}
+                            size="small"
+                            sx={{ textTransform: 'capitalize' }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <IconButton
+                            onClick={() => handleToggleEmailVerification(user.user_id, user.email_verified)}
+                            size="small"
+                            sx={{ color: user.email_verified ? '#4caf50' : '#f44336' }}
+                          >
+                            {user.email_verified ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                          </IconButton>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={user.is_admin ? 'Admin' : 'User'}
+                            color={user.is_admin ? 'primary' : 'default'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <IconButton
+                              onClick={() => handleEditUser(user)}
+                              size="small"
+                              sx={{ color: '#4a1d3f' }}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                            <IconButton
+                              onClick={() => handleDeleteUser(user.user_id)}
+                              size="small"
+                              sx={{ color: '#f44336' }}
+                              disabled={user.user_id === user?.user_id} // Can't delete yourself
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </Box>
+        )}
+
+        {/* Edit User Dialog */}
+        <Dialog 
+          open={editUserDialog.open} 
+          onClose={() => setEditUserDialog({ open: false, user: null })}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 600 }}>
+            Edit User: {editUserDialog.user?.name}
+          </DialogTitle>
+          <DialogContent>
+            {editUserDialog.user && (
+              <Box sx={{ pt: 1 }}>
+                <TextField
+                  fullWidth
+                  label="Name"
+                  defaultValue={editUserDialog.user.name}
+                  margin="normal"
+                  onChange={(e) => setEditUserDialog({
+                    ...editUserDialog,
+                    user: { ...editUserDialog.user, name: e.target.value }
+                  })}
+                />
+                <TextField
+                  fullWidth
+                  label="Nickname"
+                  defaultValue={editUserDialog.user.nickname || ''}
+                  margin="normal"
+                  onChange={(e) => setEditUserDialog({
+                    ...editUserDialog,
+                    user: { ...editUserDialog.user, nickname: e.target.value }
+                  })}
+                />
+                <TextField
+                  fullWidth
+                  label="Location State"
+                  defaultValue={editUserDialog.user.location_state}
+                  margin="normal"
+                  select
+                  onChange={(e) => setEditUserDialog({
+                    ...editUserDialog,
+                    user: { ...editUserDialog.user, location_state: e.target.value }
+                  })}
+                >
+                  {['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'].map((state) => (
+                    <MenuItem key={state} value={state}>{state}</MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  fullWidth
+                  label="Location Postcode"
+                  defaultValue={editUserDialog.user.location_postcode}
+                  margin="normal"
+                  onChange={(e) => setEditUserDialog({
+                    ...editUserDialog,
+                    user: { ...editUserDialog.user, location_postcode: e.target.value }
+                  })}
+                />
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={() => setEditUserDialog({ open: false, user: null })}
+              sx={{ color: '#717171' }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => handleSaveUser(editUserDialog.user)}
+              variant="contained"
+              sx={{ 
+                backgroundColor: '#4a1d3f',
+                '&:hover': { backgroundColor: '#3a162f' }
+              }}
+            >
+              Save Changes
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <Snackbar
           open={snackbar.open}
