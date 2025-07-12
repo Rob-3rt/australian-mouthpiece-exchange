@@ -90,11 +90,15 @@ exports.getAllListings = async (req, res) => {
     }));
     
     // Return both listings and available models
-    res.json({
+    console.log('Sending response with', listingsWithPaypal.length, 'listings');
+    const response = {
       listings: listingsWithPaypal,
       availableModels: availableModels.map(item => item.model)
-    });
+    };
+    console.log('Response data:', JSON.stringify(response, null, 2));
+    res.json(response);
   } catch (err) {
+    console.error('Error in getAllListings:', err);
     res.status(500).json({ error: 'Failed to fetch listings.' });
   }
 };
