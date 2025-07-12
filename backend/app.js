@@ -2,12 +2,25 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const http = require('http');
+const { execSync } = require('child_process');
 
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 4000;
+
+// Run database migrations on startup
+async function runMigrations() {
+  try {
+    console.log('Running database migrations...');
+    execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+    console.log('Database migrations completed successfully');
+  } catch (error) {
+    console.error('Failed to run migrations:', error);
+    // Don't exit the process, just log the error
+  }
+}
 
 // Initialize Socket.IO
 const socketService = require('./utils/socketService');
@@ -63,6 +76,13 @@ app.use('/api/messages', require('./routes/messages'));
 app.use('/api/moderation', require('./routes/moderation'));
 app.use('/api/profile', require('./routes/profile'));
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start server after running migrations
+async function startServer() {
+  await runMigrations();
+  
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+startServer();
