@@ -75,6 +75,7 @@ app.use('/api/ratings', require('./routes/ratings'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/moderation', require('./routes/moderation'));
 app.use('/api/profile', require('./routes/profile'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Start server after running migrations
 async function startServer() {
