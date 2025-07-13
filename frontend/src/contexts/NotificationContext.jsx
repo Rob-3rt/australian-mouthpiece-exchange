@@ -33,8 +33,11 @@ export const NotificationProvider = ({ children }) => {
         
         socketRef.current = io(socketUrl, {
           auth: { token },
-          timeout: 5000,
-          forceNew: true
+          timeout: 10000,
+          forceNew: true,
+          transports: ['polling', 'websocket'], // Try polling first, then websocket
+          upgrade: true,
+          rememberUpgrade: false
         });
 
         socketRef.current.on('connect', () => {
@@ -44,6 +47,7 @@ export const NotificationProvider = ({ children }) => {
         socketRef.current.on('connect_error', (error) => {
           console.error('Socket connection error:', error);
           // Don't disconnect on error, let it retry
+          // This is normal on Render free tier
         });
 
         socketRef.current.on('notification', (notification) => {
@@ -56,6 +60,12 @@ export const NotificationProvider = ({ children }) => {
 
         socketRef.current.on('disconnect', (reason) => {
           console.log('Disconnected from notification service:', reason);
+          // Don't worry about disconnections - they're expected on Render free tier
+        });
+
+        socketRef.current.on('error', (error) => {
+          console.error('Socket error:', error);
+          // Don't disconnect on error, let it retry
         });
 
         return () => {
