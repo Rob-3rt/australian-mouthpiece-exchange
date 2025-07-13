@@ -21,11 +21,13 @@ function initializeSocket(server) {
     }
   });
 
-  // Authentication middleware
+  // Authentication middleware - allow initial connection, authenticate later
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
     if (!token) {
-      return next(new Error('Authentication error'));
+      // Allow connection but mark as unauthenticated
+      socket.userId = null;
+      return next();
     }
 
     try {
@@ -33,21 +35,30 @@ function initializeSocket(server) {
       socket.userId = decoded.userId;
       next();
     } catch (err) {
-      next(new Error('Authentication error'));
+      // Allow connection but mark as unauthenticated
+      socket.userId = null;
+      next();
     }
   });
 
   // Connection handler
   io.on('connection', (socket) => {
-    console.log(`User ${socket.userId} connected`);
-    
-    // Add user to online users
-    onlineUsers.set(socket.userId, socket.id);
+    if (socket.userId) {
+      console.log(`User ${socket.userId} connected`);
+      // Add user to online users
+      onlineUsers.set(socket.userId, socket.id);
+    } else {
+      console.log('Unauthenticated user connected');
+    }
 
     // Handle disconnect
     socket.on('disconnect', () => {
-      console.log(`User ${socket.userId} disconnected`);
-      onlineUsers.delete(socket.userId);
+      if (socket.userId) {
+        console.log(`User ${socket.userId} disconnected`);
+        onlineUsers.delete(socket.userId);
+      } else {
+        console.log('Unauthenticated user disconnected');
+      }
     });
 
     // Handle user joining a conversation
