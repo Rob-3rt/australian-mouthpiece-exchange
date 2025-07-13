@@ -11,8 +11,13 @@ const onlineUsers = new Map(); // userId -> socketId
 function initializeSocket(server) {
   io = new Server(server, {
     cors: {
-      origin: config.frontendUrl,
-      methods: ["GET", "POST"]
+      origin: [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'https://australian-mouthpiece-exchange.vercel.app'
+      ],
+      methods: ["GET", "POST"],
+      credentials: true
     }
   });
 

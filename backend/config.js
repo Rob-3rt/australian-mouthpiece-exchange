@@ -10,5 +10,5 @@ module.exports = {
   smtpPort: process.env.SMTP_PORT || 587,
   smtpUser: process.env.SMTP_USER || '',
   smtpPass: process.env.SMTP_PASS || '',
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+  frontendUrl: process.env.FRONTEND_URL || 'https://australian-mouthpiece-exchange.vercel.app',
 };
