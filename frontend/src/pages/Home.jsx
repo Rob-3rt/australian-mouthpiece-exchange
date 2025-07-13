@@ -1,16 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Typography, Container, Box, Grid, Card, CardContent, Button, Rating, TextField, MenuItem, CircularProgress, Autocomplete } from '@mui/material';
+import { Typography, Container, Box, Grid, Card, CardContent, Button, Rating, CircularProgress } from '@mui/material';
 import { getListings } from '../api/listings';
 import { useNavigate } from 'react-router-dom';
-
-const STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
-const INSTRUMENT_TYPES = [
-  'Trumpet', 'Piccolo Trumpet', 'Flugelhorn', 'Cornet', 'Tenor Trombone', 'Bass Trombone', 'Alto Trombone', 'Contrabass Trombone', 'French Horn', 'Tuba', 'Sousaphone', 'Euphonium', 'Baritone Horn', 'Wagner Tuba', 'Ophicleide', 'Alto Horn', 'Mellophone'
-];
-const CONDITIONS = ['New', 'Like New', 'Excellent', 'Very Good', 'Good', 'Fair', 'Poor'];
-const BRANDS = [
-  'ACB (Austin Custom Brass)', 'Alliance', 'AR Resonance', 'Bach (Vincent Bach)', 'Best Brass', 'Blessing (E.K. Blessing)', 'Breslmair', 'Bruno Tilz', 'Curry', 'Coppergate', 'Denis Wick', 'Donat', 'Frate', 'Frost', 'Giddings & Webster', 'Giardinelli', 'Greg Black', 'GR', 'G.W. Mouthpieces', 'Hammond Design', 'Helix Brass', 'Holton (Holton-Farkas)', 'JC Custom', 'Josef Klier', 'King', 'K&G', 'La Tromba', 'Laskey', 'Legends Brass', 'Lotus', 'Marcinkiewicz', 'Meeuwsen', 'Monette', 'O\'Malley', 'Parduba', 'Patrick', 'Pickett', 'Purviance', 'Reeves', 'Robert Tucci (formerly Perantucci)', 'Rudy Mück', 'Schilke', 'Shires', 'Stork', 'Stomvi', 'Toshi', 'Vennture', 'Warburton', 'Wedge', 'Yamaha'
-];
+import FilterBar from '../components/FilterBar';
 
 export default function Home() {
   const [listings, setListings] = useState([]);
@@ -53,10 +45,6 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, [debouncedFilters]);
 
-  const handleChange = (e) => {
-    setFilters(f => ({ ...f, [e.target.name]: e.target.value }));
-  };
-
   const handleReset = () => setFilters({});
 
   return (
@@ -97,164 +85,13 @@ export default function Home() {
           </Typography>
           
           {/* Filters Section */}
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 2, 
-              mt: 4,
-              p: 3,
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <Autocomplete
-              freeSolo
-              options={INSTRUMENT_TYPES}
-              value={filters.instrument_type || ''}
-              onChange={(event, newValue) => {
-                setFilters(f => ({ ...f, instrument_type: newValue || '' }));
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Instrument"
-                  sx={{ 
-                    minWidth: 150,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px',
-                      backgroundColor: 'white'
-                    }
-                  }}
-                />
-              )}
-            />
-            <Autocomplete
-              freeSolo
-              options={BRANDS}
-              value={filters.brand || ''}
-              onChange={(event, newValue) => {
-                setFilters(f => ({ ...f, brand: newValue || '' }));
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Brand"
-                  sx={{ 
-                    minWidth: 150,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px',
-                      backgroundColor: 'white'
-                    }
-                  }}
-                />
-              )}
-            />
-            <Autocomplete
-              freeSolo
-              options={availableModels}
-              value={filters.model || ''}
-              onChange={(event, newValue) => {
-                console.log('Model filter changed:', newValue);
-                setFilters(f => ({ ...f, model: newValue || '' }));
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Model"
-                  sx={{ 
-                    minWidth: 120,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px',
-                      backgroundColor: 'white'
-                    }
-                  }}
-                />
-              )}
-            />
-            <TextField 
-              label="State" 
-              name="location_state" 
-              select 
-              onChange={handleChange} 
-              value={filters.location_state || ''} 
-              sx={{ 
-                minWidth: 120,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
-                  backgroundColor: 'white'
-                }
-              }}
-            >
-              <MenuItem value="">All States</MenuItem>
-              {STATES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-            </TextField>
-            <TextField 
-              label="Condition" 
-              name="condition" 
-              select 
-              onChange={handleChange} 
-              value={filters.condition || ''} 
-              sx={{ 
-                minWidth: 120,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
-                  backgroundColor: 'white'
-                }
-              }}
-            >
-              <MenuItem value="">All Conditions</MenuItem>
-              {CONDITIONS.map(condition => (
-                <MenuItem key={condition} value={condition}>{condition}</MenuItem>
-              ))}
-            </TextField>
-            <TextField 
-              label="Min Price" 
-              name="price_min" 
-              type="number" 
-              onChange={handleChange} 
-              value={filters.price_min || ''} 
-              sx={{ 
-                minWidth: 100,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
-                  backgroundColor: 'white'
-                }
-              }} 
-            />
-            <TextField 
-              label="Max Price" 
-              name="price_max" 
-              type="number" 
-              onChange={handleChange} 
-              value={filters.price_max || ''} 
-              sx={{ 
-                minWidth: 100,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
-                  backgroundColor: 'white'
-                }
-              }} 
-            />
-            <Button 
-              onClick={handleReset} 
-              variant="outlined"
-              sx={{
-                borderRadius: '8px',
-                fontWeight: 600,
-                textTransform: 'none',
-                borderColor: '#dddddd',
-                color: '#222222',
-                '&:hover': {
-                  borderColor: '#222222',
-                  backgroundColor: '#f7f7f7'
-                }
-              }}
-            >
-              Reset
-            </Button>
-          </Box>
+          <FilterBar
+            filters={filters}
+            setFilters={setFilters}
+            availableModels={availableModels}
+            onReset={handleReset}
+            variant="hero"
+          />
         </Container>
       </Box>
 

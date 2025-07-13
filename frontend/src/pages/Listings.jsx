@@ -1,16 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Grid, Card, CardContent, Box, TextField, MenuItem, Button, CircularProgress, Container, Autocomplete } from '@mui/material';
+import { Typography, Grid, Card, CardContent, Box, CircularProgress, Container } from '@mui/material';
 import { getListings } from '../api/listings';
 import { useNavigate } from 'react-router-dom';
-
-const STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
-const INSTRUMENT_TYPES = [
-  'Trumpet', 'Piccolo Trumpet', 'Flugelhorn', 'Cornet', 'Tenor Trombone', 'Bass Trombone', 'Alto Trombone', 'Contrabass Trombone', 'French Horn', 'Tuba', 'Sousaphone', 'Euphonium', 'Baritone Horn', 'Wagner Tuba', 'Ophicleide', 'Alto Horn', 'Mellophone'
-];
-const CONDITIONS = ['New', 'Like New', 'Excellent', 'Very Good', 'Good', 'Fair', 'Poor'];
-const BRANDS = [
-  'ACB (Austin Custom Brass)', 'Alliance', 'AR Resonance', 'Bach (Vincent Bach)', 'Best Brass', 'Blessing (E.K. Blessing)', 'Breslmair', 'Bruno Tilz', 'Curry', 'Coppergate', 'Denis Wick', 'Donat', 'Frate', 'Frost', 'Giddings & Webster', 'Giardinelli', 'Greg Black', 'GR', 'G.W. Mouthpieces', 'Hammond Design', 'Helix Brass', 'Holton (Holton-Farkas)', 'JC Custom', 'Josef Klier', 'King', 'K&G', 'La Tromba', 'Laskey', 'Legends Brass', 'Lotus', 'Marcinkiewicz', 'Meeuwsen', 'Monette', 'O\'Malley', 'Parduba', 'Patrick', 'Pickett', 'Purviance', 'Reeves', 'Robert Tucci (formerly Perantucci)', 'Rudy Mück', 'Schilke', 'Shires', 'Stork', 'Stomvi', 'Toshi', 'Vennture', 'Warburton', 'Wedge', 'Yamaha'
-];
+import FilterBar from '../components/FilterBar';
 
 export default function Listings() {
   const [listings, setListings] = useState([]);
@@ -39,9 +31,6 @@ export default function Listings() {
       .finally(() => setLoading(false));
   }, [filters]);
 
-  const handleChange = (e) => {
-    setFilters(f => ({ ...f, [e.target.name]: e.target.value }));
-  };
   const handleReset = () => setFilters({});
 
   return (
@@ -51,51 +40,12 @@ export default function Listings() {
           Browse Listings
         </Typography>
         {/* Filter Bar */}
-        <Box sx={{
-          display: 'flex', flexWrap: 'wrap', gap: 2, mb: 6, p: 3,
-          backgroundColor: '#f7f7f7', borderRadius: '16px', boxShadow: '0 2px 16px rgba(0,0,0,0.04)'
-        }}>
-          <Autocomplete
-            freeSolo
-            options={INSTRUMENT_TYPES}
-            value={filters.instrument_type || ''}
-            onChange={(event, newValue) => setFilters(f => ({ ...f, instrument_type: newValue || '' }))}
-            renderInput={(params) => (
-              <TextField {...params} label="Instrument" sx={{ minWidth: 150, '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: 'white' } }} />
-            )}
-          />
-          <Autocomplete
-            freeSolo
-            options={BRANDS}
-            value={filters.brand || ''}
-            onChange={(event, newValue) => setFilters(f => ({ ...f, brand: newValue || '' }))}
-            renderInput={(params) => (
-              <TextField {...params} label="Brand" sx={{ minWidth: 150, '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: 'white' } }} />
-            )}
-          />
-          <Autocomplete
-            freeSolo
-            options={availableModels}
-            value={filters.model || ''}
-            onChange={(event, newValue) => setFilters(f => ({ ...f, model: newValue || '' }))}
-            renderInput={(params) => (
-              <TextField {...params} label="Model" sx={{ minWidth: 120, '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: 'white' } }} />
-            )}
-          />
-          <TextField label="State" name="location_state" select onChange={handleChange} value={filters.location_state || ''} sx={{ minWidth: 120, '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: 'white' } }}>
-            <MenuItem value="">All States</MenuItem>
-            {STATES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-          </TextField>
-          <TextField label="Condition" name="condition" select onChange={handleChange} value={filters.condition || ''} sx={{ minWidth: 120, '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: 'white' } }}>
-            <MenuItem value="">All Conditions</MenuItem>
-            {CONDITIONS.map(condition => (
-              <MenuItem key={condition} value={condition}>{condition}</MenuItem>
-            ))}
-          </TextField>
-          <TextField label="Min Price" name="price_min" type="number" onChange={handleChange} value={filters.price_min || ''} sx={{ minWidth: 100, '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: 'white' } }} />
-          <TextField label="Max Price" name="price_max" type="number" onChange={handleChange} value={filters.price_max || ''} sx={{ minWidth: 100, '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: 'white' } }} />
-          <Button onClick={handleReset} variant="outlined" sx={{ borderRadius: '8px', fontWeight: 600, textTransform: 'none', borderColor: '#dddddd', color: '#222222', '&:hover': { borderColor: '#222222', backgroundColor: '#f7f7f7' } }}>Reset</Button>
-        </Box>
+        <FilterBar
+          filters={filters}
+          setFilters={setFilters}
+          availableModels={availableModels}
+          onReset={handleReset}
+        />
         {/* Listings Grid */}
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center" p={8}>
