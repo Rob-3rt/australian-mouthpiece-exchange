@@ -438,7 +438,7 @@ export default function Register() {
                   type="submit"
                   variant="contained"
                   fullWidth
-                  disabled={loading || !termsAccepted || success}
+                  disabled={loading || !termsAccepted}
                   sx={{ 
                     backgroundColor: '#4a1d3f',
                     color: 'white',
@@ -458,7 +458,7 @@ export default function Register() {
                     }
                   }}
                 >
-                  {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : success ? 'Registration Complete!' : 'Create account'}
+                  {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Create account'}
                 </Button>
               </form>
 
