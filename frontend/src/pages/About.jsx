@@ -55,7 +55,7 @@ export default function About() {
                   fontStyle: 'italic'
                 }}
               >
-                Whether you're looking to offload unused gear or find the perfect fit for your instrument, we hope the Australian Mouthpiece Exchange becomes a valuable resource for your musical journey.
+                Our mission is to help Australian brass players connect, trade, and explore. Whether you're selling a mouthpiece that wasn't right for you or searching for your next one, the Australian Mouthpiece Exchange is a simple, free, dedicated space to make it happen.
               </Typography>
             </Box>
 
