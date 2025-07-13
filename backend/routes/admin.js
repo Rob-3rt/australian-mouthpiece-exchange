@@ -159,15 +159,29 @@ router.patch('/users/:id/admin', async (req, res) => {
 router.delete('/users/:id', async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
+    console.log(`Attempting to delete user with ID: ${userId}`);
     
     // Don't allow admin to delete themselves
     if (userId === req.user.userId) {
       return res.status(400).json({ error: 'Cannot delete your own account.' });
     }
     
+    // Check if user exists first
+    const userToDelete = await prisma.user.findUnique({
+      where: { user_id: userId }
+    });
+    
+    if (!userToDelete) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    
+    console.log(`Deleting related data for user: ${userToDelete.email}`);
+    
     // Delete user's listings, messages, and ratings first
-    await prisma.listing.deleteMany({ where: { user_id: userId } });
-    await prisma.message.deleteMany({ 
+    const listingsDeleted = await prisma.listing.deleteMany({ where: { user_id: userId } });
+    console.log(`Deleted ${listingsDeleted.count} listings`);
+    
+    const messagesDeleted = await prisma.message.deleteMany({ 
       where: { 
         OR: [
           { from_user_id: userId },
@@ -175,17 +189,23 @@ router.delete('/users/:id', async (req, res) => {
         ]
       } 
     });
-    await prisma.rating.deleteMany({ where: { rater_id: userId } });
-    await prisma.rating.deleteMany({ where: { rated_user_id: userId } });
-    await prisma.flaggedContent.deleteMany({ where: { reporter_id: userId } });
+    console.log(`Deleted ${messagesDeleted.count} messages`);
+    
+    const ratingsFromDeleted = await prisma.peerRating.deleteMany({ where: { from_user_id: userId } });
+    const ratingsToDeleted = await prisma.peerRating.deleteMany({ where: { to_user_id: userId } });
+    console.log(`Deleted ${ratingsFromDeleted.count + ratingsToDeleted.count} ratings`);
+    
+    const flagsDeleted = await prisma.flaggedContent.deleteMany({ where: { reporter_id: userId } });
+    console.log(`Deleted ${flagsDeleted.count} flagged content`);
     
     // Finally delete the user
     await prisma.user.delete({ where: { user_id: userId } });
+    console.log(`Successfully deleted user: ${userToDelete.email}`);
     
     res.json({ message: 'User deleted successfully.' });
   } catch (error) {
     console.error('Error deleting user:', error);
-    res.status(500).json({ error: 'Failed to delete user.' });
+    res.status(500).json({ error: 'Failed to delete user.', details: error.message });
   }
 });
 
