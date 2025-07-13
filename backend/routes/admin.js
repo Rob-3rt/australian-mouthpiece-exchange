@@ -23,11 +23,11 @@ router.get('/users', async (req, res) => {
         email_verified: true,
         is_admin: true,
         status: true,
-        created_at: true,
+        join_date: true,
         average_rating: true,
         rating_count: true
       },
-      orderBy: { created_at: 'desc' }
+      orderBy: { join_date: 'desc' }
     });
     
     res.json(users);
@@ -52,7 +52,7 @@ router.get('/users/:id', async (req, res) => {
         email_verified: true,
         is_admin: true,
         status: true,
-        created_at: true,
+        join_date: true,
         average_rating: true,
         rating_count: true
       }
@@ -94,7 +94,7 @@ router.put('/users/:id', async (req, res) => {
         email_verified: true,
         is_admin: true,
         status: true,
-        created_at: true
+        join_date: true
       }
     });
     
@@ -203,7 +203,7 @@ router.delete('/unverified-users', async (req, res) => {
         user_id: true,
         email: true,
         name: true,
-        created_at: true
+        join_date: true
       }
     });
     
