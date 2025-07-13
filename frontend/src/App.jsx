@@ -40,9 +40,9 @@ function AdminRoute({ children }) {
   return children;
 }
 
-function NavBar({ onOpenCreateListing, unreadCount }) {
+function NavBar({ onOpenCreateListing }) {
   const { user, logout } = useAuth();
-  const { handleMenuOpen, unreadCount: notificationCount } = useNotifications();
+  const { handleMenuOpen, unreadCount } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -454,17 +454,8 @@ function NavBar({ onOpenCreateListing, unreadCount }) {
 function App() {
   const [createModalOpen, setCreateModalOpen] = React.useState(false);
   const { user } = useAuth();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
-  const [unreadCount, setUnreadCount] = React.useState(0);
-  React.useEffect(() => {
-    if (!user) return;
-    api.get('/api/messages')
-      .then(res => {
-        const count = res.data.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
-        setUnreadCount(count);
-      })
-      .catch(() => setUnreadCount(0));
-  }, [user]);
   const handleOpenCreateListing = () => {
     if (!user) return;
     setCreateModalOpen(true);
@@ -478,7 +469,7 @@ function App() {
   };
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <NavBar onOpenCreateListing={handleOpenCreateListing} unreadCount={unreadCount} />
+      <NavBar onOpenCreateListing={handleOpenCreateListing} />
       <CreateListingModal open={createModalOpen} onClose={handleCloseCreateListing} onSuccess={handleCreateSuccess} />
       <Box component="main" sx={{ flexGrow: 1, py: 3 }}>
         <Container maxWidth="lg">

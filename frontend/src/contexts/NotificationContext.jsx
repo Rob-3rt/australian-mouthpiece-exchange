@@ -25,6 +25,9 @@ export const NotificationProvider = ({ children }) => {
   // Connect to Socket.IO when user is authenticated
   useEffect(() => {
     if (user && token) {
+      // Initial refresh of unread count
+      refreshUnreadCount();
+      
       try {
         // Use the same URL logic as the API config
         const socketUrl = (window.location.hostname === 'mouthpieceexchange.org' || 
