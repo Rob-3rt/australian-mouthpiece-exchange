@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 // Helper: send verification email
 async function sendVerificationEmail(user, req) {
   const token = jwt.sign({ userId: user.user_id }, config.jwtSecret, { expiresIn: '1d' });
-  const verifyUrl = `${req.protocol}://${req.get('host')}/api/auth/verify-email?token=${token}`;
+  const verifyUrl = `${config.frontendUrl}/verify-email?token=${token}`;
   const transporter = nodemailer.createTransport({
     host: config.smtpHost,
     port: config.smtpPort,
@@ -72,7 +72,7 @@ exports.register = async (req, res) => {
       console.log('Email verification skipped (email not configured):', emailError.message);
       // For development/testing, log the verification URL
       const token = jwt.sign({ userId: user.user_id }, config.jwtSecret, { expiresIn: '1d' });
-      const verifyUrl = `${req.protocol}://${req.get('host')}/api/auth/verify-email?token=${token}`;
+      const verifyUrl = `${config.frontendUrl}/verify-email?token=${token}`;
       console.log('Verification URL for testing:', verifyUrl);
     }
     

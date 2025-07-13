@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import EmailVerification from './pages/EmailVerification';
 import Listings from './pages/Listings';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
@@ -333,6 +334,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<EmailVerification />} />
             <Route path="/listings" element={<Listings />} />
             <Route path="/listings/:id" element={<ListingDetails />} />
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
