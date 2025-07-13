@@ -95,12 +95,16 @@ export default function AdminDashboard() {
 
   // User management functions
   const handleDeleteUser = async (userId) => {
+    console.log('Attempting to delete user:', userId);
     if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
     try {
-      await api.delete(`/api/admin/users/${userId}`);
+      console.log('Sending delete request to:', `/api/admin/users/${userId}`);
+      const response = await api.delete(`/api/admin/users/${userId}`);
+      console.log('Delete response:', response);
       setSnackbar({ open: true, message: 'User deleted successfully', severity: 'success' });
       fetchData();
     } catch (error) {
+      console.error('Delete user error:', error);
       setSnackbar({ open: true, message: 'Failed to delete user', severity: 'error' });
     }
   };
@@ -652,10 +656,19 @@ export default function AdminDashboard() {
                               <EditIcon />
                             </IconButton>
                             <IconButton
-                              onClick={() => handleDeleteUser(user.user_id)}
+                              onClick={() => {
+                                console.log('Delete button clicked for user:', user.user_id);
+                                handleDeleteUser(user.user_id);
+                              }}
                               size="small"
                               sx={{ color: '#f44336' }}
-                              disabled={user.user_id === currentUser?.user_id} // Can't delete yourself
+                              disabled={(() => {
+                                console.log('Checking delete button disabled state:');
+                                console.log('  user.user_id:', user.user_id);
+                                console.log('  currentUser?.user_id:', currentUser?.user_id);
+                                console.log('  currentUser:', currentUser);
+                                return user.user_id === currentUser?.user_id;
+                              })()} // Can't delete yourself
                             >
                               <DeleteIcon />
                             </IconButton>
