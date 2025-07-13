@@ -761,6 +761,28 @@ export default function ListingDetails() {
         </Box>
       </Box>
       
+      {/* Footer Disclaimer */}
+      <Box sx={{ 
+        mt: 6, 
+        pt: 4, 
+        borderTop: '1px solid #dddddd',
+        backgroundColor: '#f7f7f7',
+        borderRadius: '12px',
+        p: 3
+      }}>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: '#717171',
+            lineHeight: 1.6,
+            textAlign: 'center',
+            fontStyle: 'italic'
+          }}
+        >
+          Note: The Mouthpiece Exchange is a platform that enables individuals to list and sell mouthpieces directly to buyers. We do not facilitate payments, handle shipping, or take any commission from sales. All transactions are arranged solely between the buyer and seller.
+        </Typography>
+      </Box>
+      
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
