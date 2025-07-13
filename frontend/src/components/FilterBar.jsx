@@ -34,7 +34,7 @@ export default function FilterBar({
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [filtersOpen, setFiltersOpen] = useState(!isMobile);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const handleChange = (e) => {
     setFilters(f => ({ ...f, [e.target.name]: e.target.value }));
