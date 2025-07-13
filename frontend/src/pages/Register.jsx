@@ -50,7 +50,7 @@ export default function Register() {
     const ok = await registerUser(data);
     if (ok) {
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 2000);
+      // Don't redirect automatically - let user see the verification message
     } else {
       // Scroll to error message
       document.querySelector('.MuiAlert-root')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -110,16 +110,61 @@ export default function Register() {
                 </Alert>
               )}
               {success && (
-                <Alert 
-                  severity="success" 
-                  sx={{ 
-                    mb: 3,
+                <Box sx={{ mb: 3 }}>
+                  <Alert 
+                    severity="success" 
+                    sx={{ 
+                      mb: 2,
+                      borderRadius: '8px',
+                      '& .MuiAlert-message': { fontWeight: 500 }
+                    }}
+                  >
+                    Registration successful! Please check your email to verify your account.
+                  </Alert>
+                  <Box sx={{ 
+                    p: 3, 
+                    backgroundColor: '#f8f9fa', 
                     borderRadius: '8px',
-                    '& .MuiAlert-message': { fontWeight: 500 }
-                  }}
-                >
-                  Registration successful! Please check your email to verify your account.
-                </Alert>
+                    border: '1px solid #e9ecef'
+                  }}>
+                    <Typography variant="h6" sx={{ mb: 2, color: '#222222', fontWeight: 600 }}>
+                      Next Steps:
+                    </Typography>
+                    <Box component="ul" sx={{ pl: 2, mb: 2 }}>
+                      <Typography component="li" variant="body2" sx={{ mb: 1, color: '#717171' }}>
+                        Check your email inbox (and spam folder)
+                      </Typography>
+                      <Typography component="li" variant="body2" sx={{ mb: 1, color: '#717171' }}>
+                        Click the verification link in the email
+                      </Typography>
+                      <Typography component="li" variant="body2" sx={{ mb: 1, color: '#717171' }}>
+                        Return here to log in once verified
+                      </Typography>
+                    </Box>
+                    <Button
+                      component={Link}
+                      to="/login"
+                      variant="contained"
+                      sx={{ 
+                        backgroundColor: '#4a1d3f',
+                        color: 'white',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                        py: 1,
+                        px: 3,
+                        boxShadow: 'none',
+                        '&:hover': { 
+                          backgroundColor: '#3a162f',
+                          boxShadow: '0 2px 8px rgba(74, 29, 63, 0.3)'
+                        }
+                      }}
+                    >
+                      Go to Login
+                    </Button>
+                  </Box>
+                </Box>
               )}
               
               <form onSubmit={handleSubmit(onSubmit)}>
