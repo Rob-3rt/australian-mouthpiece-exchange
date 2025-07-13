@@ -243,7 +243,7 @@ function NavBar({ onOpenCreateListing }) {
                       '&:hover': { backgroundColor: '#f7f7f7' }
                     }}
                   >
-                    <Badge badgeContent={notificationCount} color="error">
+                    <Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="error">
                       <NotificationsIcon />
                     </Badge>
                   </IconButton>
@@ -279,7 +279,7 @@ function NavBar({ onOpenCreateListing }) {
                     '&:hover': { backgroundColor: '#f7f7f7' }
                   }}
                 >
-                  <Badge badgeContent={notificationCount} color="error">
+                  <Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="error">
                     <NotificationsIcon />
                   </Badge>
                 </IconButton>
