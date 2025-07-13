@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Typography, Box, TextField, Button, CircularProgress, Container, Card, CardContent } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import api from '../api/axios';
 
 function getPaypalUrl(paypalLink, price) {
@@ -17,6 +18,7 @@ export default function Conversation() {
   const [searchParams] = useSearchParams();
   const listingId = searchParams.get('listing');
   const { user } = useAuth();
+  const { refreshUnreadCount } = useNotifications();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -46,6 +48,21 @@ export default function Conversation() {
       console.log('API URL:', url);
       const response = await api.get(url);
       setMessages(response.data);
+      
+      // Mark unread messages as read
+      const unreadMessages = response.data.filter(msg => 
+        msg.to_user_id === user.user_id && !msg.read
+      );
+      
+      if (unreadMessages.length > 0) {
+        await Promise.all(
+          unreadMessages.map(msg => 
+            api.patch(`/api/messages/${msg.message_id}/read`)
+          )
+        );
+        // Refresh unread count after marking messages as read
+        refreshUnreadCount();
+      }
     } catch (error) {
       console.error('Failed to fetch messages:', error);
     } finally {
@@ -181,8 +198,8 @@ export default function Conversation() {
                   </Box>
                 </a>
                 
-                {/* PayPal Button */}
-                {listing.paypal_link_effective && (
+                {/* PayPal Button - Only show for buyers */}
+                {listing.paypal_link_effective && listing.user_id !== user.user_id && (
                   <a
                     href={getPaypalUrl(listing.paypal_link_effective, listing.price)}
                     target="_blank"

@@ -151,6 +151,23 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
+  const refreshUnreadCount = async () => {
+    try {
+      const response = await fetch('/api/messages', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const conversations = await response.json();
+        const totalUnread = conversations.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);
+        setUnreadCount(totalUnread);
+      }
+    } catch (error) {
+      console.error('Failed to refresh unread count:', error);
+    }
+  };
+
   const value = {
     notifications,
     unreadCount,
@@ -159,6 +176,7 @@ export const NotificationProvider = ({ children }) => {
     clearNotifications,
     joinConversation,
     leaveConversation,
+    refreshUnreadCount,
     handleMenuOpen,
     handleMenuClose,
     anchorEl

@@ -2,16 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { Typography, Box, Grid, Card, CardContent, CircularProgress, Container } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import api from '../api/axios';
 
 export default function Messages() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { refreshUnreadCount } = useNotifications();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchConversations();
+    
+    // Refresh conversations when page gains focus (user returns from conversation)
+    const handleFocus = () => {
+      fetchConversations();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const fetchConversations = async () => {
@@ -19,6 +29,8 @@ export default function Messages() {
       const response = await api.get('/api/messages');
       console.log('Fetched conversations:', response.data);
       setConversations(response.data);
+      // Refresh unread count in notification context
+      refreshUnreadCount();
     } catch (error) {
       console.error('Failed to fetch conversations:', error);
     } finally {
