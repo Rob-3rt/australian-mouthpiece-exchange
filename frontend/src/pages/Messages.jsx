@@ -124,7 +124,11 @@ export default function Messages() {
                       borderColor: '#222222'
                     }
                   }}
-                  onClick={() => handleConversationClick(conv.conversation_id, conv.listing_id)}
+                  onClick={() => {
+                    console.log('Conversation object:', conv);
+                    console.log('conv.conversation_id:', conv.conversation_id);
+                    handleConversationClick(conv.conversation_id, conv.listing_id);
+                  }}
                 >
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
