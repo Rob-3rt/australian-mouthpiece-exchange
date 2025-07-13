@@ -135,12 +135,12 @@ export default function Home() {
           <>
             {/* Latest Listings Title */}
             <Typography 
-              variant="h3" 
+              variant="h4" 
               sx={{ 
-                fontWeight: 700, 
+                fontWeight: 450, 
                 color: '#222222', 
-                mb: 4,
-                textAlign: 'center',
+                mb: 3,
+                textAlign: 'left',
                 letterSpacing: -0.5
               }}
             >
