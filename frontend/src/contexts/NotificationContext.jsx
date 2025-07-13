@@ -27,8 +27,10 @@ export const NotificationProvider = ({ children }) => {
     if (user && token) {
       try {
         // Use the same URL logic as the API config
-        const socketUrl = window.location.hostname === 'australian-mouthpiece-exchange.vercel.app' 
-          ? 'https://australian-mouthpiece-exchange-backend.onrender.com'
+        const socketUrl = (window.location.hostname === 'mouthpieceexchange.org' || 
+                          window.location.hostname === 'www.mouthpieceexchange.org' ||
+                          window.location.hostname === 'australian-mouthpiece-exchange.vercel.app')
+          ? 'https://api.mouthpieceexchange.org'
           : 'http://localhost:4000';
         
         socketRef.current = io(socketUrl, {

@@ -14,7 +14,9 @@ function initializeSocket(server) {
       origin: [
         'http://localhost:5173',
         'http://localhost:3000',
-        'https://australian-mouthpiece-exchange.vercel.app'
+        'https://australian-mouthpiece-exchange.vercel.app',
+        'https://mouthpieceexchange.org',
+        'https://www.mouthpieceexchange.org'
       ],
       methods: ["GET", "POST"],
       credentials: true

@@ -35,7 +35,9 @@ app.use(cors({
       'http://localhost:5173',
       'http://localhost:3000',
       'https://australian-mouthpiece-exchange.vercel.app',
-      'https://australian-mouthpiece-exchange.vercel.app/'
+      'https://australian-mouthpiece-exchange.vercel.app/',
+      'https://mouthpieceexchange.org',
+      'https://www.mouthpieceexchange.org'
     ];
     
     // Add the FRONTEND_URL from environment if it exists
