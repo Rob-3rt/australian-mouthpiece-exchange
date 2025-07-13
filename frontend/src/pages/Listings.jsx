@@ -7,6 +7,7 @@ import FilterBar from '../components/FilterBar';
 export default function Listings() {
   const [listings, setListings] = useState([]);
   const [availableModels, setAvailableModels] = useState([]);
+  const [availableBrands, setAvailableBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
@@ -20,9 +21,11 @@ export default function Listings() {
         if (response.listings && response.availableModels) {
           setListings(response.listings);
           setAvailableModels(response.availableModels);
+          setAvailableBrands(response.availableBrands || []);
         } else {
           setListings(response);
           setAvailableModels([]);
+          setAvailableBrands([]);
         }
       })
       .catch(err => {
@@ -44,6 +47,7 @@ export default function Listings() {
           filters={filters}
           setFilters={setFilters}
           availableModels={availableModels}
+          availableBrands={availableBrands}
           onReset={handleReset}
         />
         {/* Listings Grid */}

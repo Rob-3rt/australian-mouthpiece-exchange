@@ -59,10 +59,11 @@ exports.getAllListings = async (req, res) => {
       console.log('No user_id filter, showing only active listings');
     }
     
-    // Get available models for autocomplete (excluding the current model filter)
+    // Get available models and brands for autocomplete (excluding the current model/brand filters)
     const modelFilters = { ...filters };
     delete modelFilters.model; // Remove model filter to get all available models
-    // For autocomplete, only show models from active listings
+    delete modelFilters.brand; // Remove brand filter to get all available brands
+    // For autocomplete, only show models and brands from active listings
     if (!user_id || user_id === 'me') {
       modelFilters.status = 'active';
     }
@@ -71,6 +72,13 @@ exports.getAllListings = async (req, res) => {
       select: { model: true },
       distinct: ['model'],
       orderBy: { model: 'asc' }
+    });
+    
+    const availableBrands = await prisma.listing.findMany({
+      where: modelFilters,
+      select: { brand: true },
+      distinct: ['brand'],
+      orderBy: { brand: 'asc' }
     });
     
     console.log('Filters being applied:', filters);
@@ -89,11 +97,12 @@ exports.getAllListings = async (req, res) => {
       paypal_link_effective: listing.paypal_link_override || listing.user.paypal_link || null
     }));
     
-    // Return both listings and available models
+    // Return both listings and available models/brands
     console.log('Sending response with', listingsWithPaypal.length, 'listings');
     const response = {
       listings: listingsWithPaypal,
-      availableModels: availableModels.map(item => item.model)
+      availableModels: availableModels.map(item => item.model),
+      availableBrands: availableBrands.map(item => item.brand)
     };
     console.log('Response data:', JSON.stringify(response, null, 2));
     res.json(response);

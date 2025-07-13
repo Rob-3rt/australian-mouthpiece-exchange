@@ -29,6 +29,7 @@ export default function FilterBar({
   filters, 
   setFilters, 
   availableModels = [], 
+  availableBrands = [],
   onReset,
   variant = 'default' // 'default' or 'hero'
 }) {
@@ -161,7 +162,7 @@ export default function FilterBar({
             />
             <Autocomplete
               freeSolo
-              options={BRANDS}
+              options={availableBrands}
               value={filters.brand || ''}
               onChange={(event, newValue) => {
                 setFilters(f => ({ ...f, brand: newValue || '' }));
@@ -262,7 +263,7 @@ export default function FilterBar({
       />
       <Autocomplete
         freeSolo
-        options={BRANDS}
+        options={availableBrands}
         value={filters.brand || ''}
         onChange={(event, newValue) => {
           setFilters(f => ({ ...f, brand: newValue || '' }));

@@ -7,6 +7,7 @@ import FilterBar from '../components/FilterBar';
 export default function Home() {
   const [listings, setListings] = useState([]);
   const [availableModels, setAvailableModels] = useState([]);
+  const [availableBrands, setAvailableBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
@@ -32,10 +33,12 @@ export default function Home() {
         if (response.listings && response.availableModels) {
           setListings(response.listings);
           setAvailableModels(response.availableModels);
+          setAvailableBrands(response.availableBrands || []);
         } else {
           // Handle old response format for backward compatibility
           setListings(response);
           setAvailableModels([]);
+          setAvailableBrands([]);
         }
       })
       .catch(err => {
@@ -89,6 +92,7 @@ export default function Home() {
             filters={filters}
             setFilters={setFilters}
             availableModels={availableModels}
+            availableBrands={availableBrands}
             onReset={handleReset}
             variant="hero"
           />
