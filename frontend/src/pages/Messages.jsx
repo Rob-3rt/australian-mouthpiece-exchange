@@ -16,7 +16,7 @@ export default function Messages() {
 
   const fetchConversations = async () => {
     try {
-      const response = await api.get('/api/messages/conversations');
+      const response = await api.get('/api/messages');
       setConversations(response.data);
     } catch (error) {
       console.error('Failed to fetch conversations:', error);

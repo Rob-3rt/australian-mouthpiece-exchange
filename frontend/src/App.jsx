@@ -19,7 +19,7 @@ import { useAuth } from './contexts/AuthContext';
 import { useNotifications } from './contexts/NotificationContext';
 import CreateListingModal from './components/CreateListingModal';
 import MailIcon from '@mui/icons-material/Mail';
-import axios from 'axios';
+import api from './api/axios';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -303,7 +303,7 @@ function App() {
   const [unreadCount, setUnreadCount] = React.useState(0);
   React.useEffect(() => {
     if (!user) return;
-    axios.get('/api/messages')
+    api.get('/api/messages')
       .then(res => {
         const count = res.data.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
         setUnreadCount(count);

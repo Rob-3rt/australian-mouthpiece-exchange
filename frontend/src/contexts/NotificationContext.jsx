@@ -26,7 +26,12 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (user && token) {
       try {
-        socketRef.current = io('http://localhost:4000', {
+        // Use the same URL logic as the API config
+        const socketUrl = window.location.hostname === 'australian-mouthpiece-exchange.vercel.app' 
+          ? 'https://australian-mouthpiece-exchange-backend.onrender.com'
+          : 'http://localhost:4000';
+        
+        socketRef.current = io(socketUrl, {
           auth: { token },
           timeout: 5000,
           forceNew: true
