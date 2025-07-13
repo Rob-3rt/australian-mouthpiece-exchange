@@ -26,9 +26,9 @@ export default function Messages() {
     }
   };
 
-  const handleConversationClick = (conversationId, listingId) => {
-    console.log('Clicking conversation:', { conversationId, listingId });
-    navigate(`/messages/${conversationId}${listingId ? `?listing=${listingId}` : ''}`);
+  const handleConversationClick = (userId, listingId) => {
+    console.log('Clicking conversation:', { userId, listingId });
+    navigate(`/messages/${userId}${listingId ? `?listing=${listingId}` : ''}`);
   };
 
   if (loading) {
@@ -124,11 +124,7 @@ export default function Messages() {
                       borderColor: '#222222'
                     }
                   }}
-                  onClick={() => {
-                    console.log('Conversation object:', conv);
-                    console.log('conv.conversation_id:', conv.conversation_id);
-                    handleConversationClick(conv.conversation_id, conv.listing_id);
-                  }}
+                  onClick={() => handleConversationClick(conv.conversation_id, conv.listing_id)}
                 >
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

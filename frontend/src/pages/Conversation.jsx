@@ -13,7 +13,7 @@ function getPaypalUrl(paypalLink, price) {
 }
 
 export default function Conversation() {
-  const { conversationId } = useParams();
+  const { userId } = useParams();
   const [searchParams] = useSearchParams();
   const listingId = searchParams.get('listing');
   const { user } = useAuth();
@@ -37,12 +37,12 @@ export default function Conversation() {
     if (listingId) {
       fetchListing();
     }
-  }, [conversationId, listingId]);
+  }, [userId, listingId]);
 
   const fetchMessages = async () => {
     try {
-      console.log('Fetching messages for conversationId:', conversationId, 'listingId:', listingId);
-      const url = `/api/messages/conversation/${conversationId}${listingId ? `?listing_id=${listingId}` : ''}`;
+      console.log('Fetching messages for userId:', userId, 'listingId:', listingId);
+      const url = `/api/messages/conversation/${userId}${listingId ? `?listing_id=${listingId}` : ''}`;
       console.log('API URL:', url);
       const response = await api.get(url);
       setMessages(response.data);
@@ -69,7 +69,7 @@ export default function Conversation() {
     setSending(true);
     try {
       const response = await api.post('/api/messages', {
-        to_user_id: conversationId,
+        to_user_id: userId,
         content: newMessage,
         listing_id: listingId
       });

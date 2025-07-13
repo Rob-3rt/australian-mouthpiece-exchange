@@ -63,8 +63,6 @@ exports.getConversations = async (req, res) => {
       }
     }
     const result = Array.from(conversationMap.values());
-    console.log('Returning conversations:', result);
-    console.log('First conversation structure:', result[0] ? Object.keys(result[0]) : 'No conversations');
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch conversations.' });
