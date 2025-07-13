@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Typography, Container, Box, Grid, Card, CardContent, Button, Rating, CircularProgress } from '@mui/material';
+import { Typography, Container, Box, Grid, Card, CardContent, Button, Rating, CircularProgress, Pagination } from '@mui/material';
 import { getListings } from '../api/listings';
 import { useNavigate } from 'react-router-dom';
 import FilterBar from '../components/FilterBar';
@@ -12,6 +12,7 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, totalCount: 0 });
   const debounceTimeout = useRef();
   const navigate = useNavigate();
 
@@ -28,17 +29,20 @@ export default function Home() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    getListings(debouncedFilters)
+    const params = { ...debouncedFilters, page: pagination.page };
+    getListings(params)
       .then(response => {
         if (response.listings && response.availableModels) {
           setListings(response.listings);
           setAvailableModels(response.availableModels);
           setAvailableBrands(response.availableBrands || []);
+          setPagination(response.pagination || { page: 1, totalPages: 1, totalCount: 0 });
         } else {
           // Handle old response format for backward compatibility
           setListings(response);
           setAvailableModels([]);
           setAvailableBrands([]);
+          setPagination({ page: 1, totalPages: 1, totalCount: 0 });
         }
       })
       .catch(err => {
@@ -46,9 +50,16 @@ export default function Home() {
         setError(err.response?.data?.error || 'Failed to load listings');
       })
       .finally(() => setLoading(false));
-  }, [debouncedFilters]);
+  }, [debouncedFilters, pagination.page]);
 
-  const handleReset = () => setFilters({});
+  const handleReset = () => {
+    setFilters({});
+    setPagination({ page: 1, totalPages: 1, totalCount: 0 });
+  };
+  
+  const handlePageChange = (event, newPage) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
 
   return (
     <Box sx={{ backgroundColor: '#ffffff' }}>
@@ -121,13 +132,28 @@ export default function Home() {
             </Typography>
           </Box>
         ) : (
-          <Box sx={{ 
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 1,
-            justifyContent: 'flex-start'
-          }}>
-            {listings.map(listing => (
+          <>
+            {/* Latest Listings Title */}
+            <Typography 
+              variant="h3" 
+              sx={{ 
+                fontWeight: 700, 
+                color: '#222222', 
+                mb: 4,
+                textAlign: 'center',
+                letterSpacing: -0.5
+              }}
+            >
+              Latest Listings
+            </Typography>
+            
+            <Box sx={{ 
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1,
+              justifyContent: 'flex-start'
+            }}>
+              {listings.map(listing => (
               <Box key={listing.listing_id} sx={{ 
                 flex: { xs: '0 0 100%', sm: '0 0 calc(50% - 4px)', md: '0 0 calc(25% - 6px)' },
                 display: 'flex'
@@ -281,6 +307,47 @@ export default function Home() {
               </Box>
             ))}
           </Box>
+          
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              mt: 6,
+              mb: 2
+            }}>
+              <Pagination
+                count={pagination.totalPages}
+                page={pagination.page}
+                onChange={handlePageChange}
+                color="primary"
+                size="large"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    '&.Mui-selected': {
+                      backgroundColor: '#4a1d3f',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#3a162f'
+                      }
+                    }
+                  }
+                }}
+              />
+            </Box>
+          )}
+          
+          {/* Results count */}
+          {pagination.totalCount > 0 && (
+            <Box sx={{ textAlign: 'center', mt: 2, mb: 4 }}>
+              <Typography variant="body2" sx={{ color: '#717171' }}>
+                Showing {((pagination.page - 1) * 24) + 1} - {Math.min(pagination.page * 24, pagination.totalCount)} of {pagination.totalCount} listings
+              </Typography>
+            </Box>
+          )}
+          </>
         )}
       </Container>
     </Box>

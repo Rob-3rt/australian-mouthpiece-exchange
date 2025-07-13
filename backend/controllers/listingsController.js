@@ -82,13 +82,24 @@ exports.getAllListings = async (req, res) => {
     });
     
     console.log('Filters being applied:', filters);
+    
+    // Add pagination support
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 24; // Default 24 listings per page
+    const skip = (page - 1) * limit;
+    
     const listings = await prisma.listing.findMany({
       where: filters,
       include: {
         user: { select: { user_id: true, name: true, nickname: true, average_rating: true, rating_count: true, location_state: true, location_postcode: true, paypal_link: true } }
       },
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: 'desc' },
+      take: limit,
+      skip: skip
     });
+    
+    // Get total count for pagination
+    const totalCount = await prisma.listing.count({ where: filters });
     console.log('Found listings:', listings.length);
     console.log('Listing statuses:', listings.map(l => ({ id: l.listing_id, status: l.status })));
     // Add effective PayPal link to each listing
@@ -97,12 +108,20 @@ exports.getAllListings = async (req, res) => {
       paypal_link_effective: listing.paypal_link_override || listing.user.paypal_link || null
     }));
     
-    // Return both listings and available models/brands
+    // Return both listings and available models/brands with pagination info
     console.log('Sending response with', listingsWithPaypal.length, 'listings');
     const response = {
       listings: listingsWithPaypal,
       availableModels: availableModels.map(item => item.model),
-      availableBrands: availableBrands.map(item => item.brand)
+      availableBrands: availableBrands.map(item => item.brand),
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNextPage: page < Math.ceil(totalCount / limit),
+        hasPrevPage: page > 1
+      }
     };
     console.log('Response data:', JSON.stringify(response, null, 2));
     res.json(response);
