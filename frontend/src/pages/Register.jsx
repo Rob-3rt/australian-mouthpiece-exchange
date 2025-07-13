@@ -47,8 +47,9 @@ export default function Register() {
     
     const ok = await registerUser(data);
     if (ok) {
-      // Redirect to dedicated success page
+      // Redirect to dedicated success page and scroll to top
       navigate('/registration-success');
+      window.scrollTo(0, 0);
     } else {
       // Scroll to error message
       document.querySelector('.MuiAlert-root')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
