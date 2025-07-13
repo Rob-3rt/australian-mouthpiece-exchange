@@ -38,7 +38,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user: currentUser } = useAuth();
   const [stats, setStats] = useState(null);
   const [flags, setFlags] = useState([]);
   const [users, setUsers] = useState([]);
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [currentUser]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -655,7 +655,7 @@ export default function AdminDashboard() {
                               onClick={() => handleDeleteUser(user.user_id)}
                               size="small"
                               sx={{ color: '#f44336' }}
-                              disabled={user.user_id === user?.user_id} // Can't delete yourself
+                              disabled={user.user_id === currentUser?.user_id} // Can't delete yourself
                             >
                               <DeleteIcon />
                             </IconButton>
