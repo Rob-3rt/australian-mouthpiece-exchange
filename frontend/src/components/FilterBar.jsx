@@ -30,6 +30,7 @@ export default function FilterBar({
   setFilters, 
   availableModels = [], 
   availableBrands = [],
+  availableInstrumentTypes = [],
   onReset,
   variant = 'default' // 'default' or 'hero'
 }) {
@@ -147,7 +148,7 @@ export default function FilterBar({
           <Box sx={filterContainerSx}>
             <Autocomplete
               freeSolo
-              options={INSTRUMENT_TYPES}
+              options={availableInstrumentTypes}
               value={filters.instrument_type || ''}
               onChange={(event, newValue) => {
                 setFilters(f => ({ ...f, instrument_type: newValue || '' }));
@@ -248,7 +249,7 @@ export default function FilterBar({
     <Box sx={filterContainerSx}>
       <Autocomplete
         freeSolo
-        options={INSTRUMENT_TYPES}
+        options={availableInstrumentTypes}
         value={filters.instrument_type || ''}
         onChange={(event, newValue) => {
           setFilters(f => ({ ...f, instrument_type: newValue || '' }));

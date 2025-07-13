@@ -41,7 +41,10 @@ export default function Conversation() {
 
   const fetchMessages = async () => {
     try {
-      const response = await api.get(`/api/messages/conversation/${conversationId}${listingId ? `?listing_id=${listingId}` : ''}`);
+      console.log('Fetching messages for conversationId:', conversationId, 'listingId:', listingId);
+      const url = `/api/messages/conversation/${conversationId}${listingId ? `?listing_id=${listingId}` : ''}`;
+      console.log('API URL:', url);
+      const response = await api.get(url);
       setMessages(response.data);
     } catch (error) {
       console.error('Failed to fetch messages:', error);

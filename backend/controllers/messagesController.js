@@ -43,7 +43,7 @@ exports.getConversations = async (req, res) => {
         }
         conversationMap.set(key, {
           other_user: partner,
-          conversation_id: partnerId,
+          conversation_id: partnerId, // This is the user ID of the conversation partner
           listing_id: msg.listing_id,
           listing_brand: listingDetails?.brand || null,
           listing_model: listingDetails?.model || null,
@@ -62,7 +62,9 @@ exports.getConversations = async (req, res) => {
         conversationMap.get(key).updated_at = msg.timestamp;
       }
     }
-    res.json(Array.from(conversationMap.values()));
+    const result = Array.from(conversationMap.values());
+    console.log('Returning conversations:', result);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch conversations.' });
   }

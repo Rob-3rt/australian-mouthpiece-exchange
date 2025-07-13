@@ -8,6 +8,7 @@ export default function Home() {
   const [listings, setListings] = useState([]);
   const [availableModels, setAvailableModels] = useState([]);
   const [availableBrands, setAvailableBrands] = useState([]);
+  const [availableInstrumentTypes, setAvailableInstrumentTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
@@ -36,12 +37,14 @@ export default function Home() {
           setListings(response.listings);
           setAvailableModels(response.availableModels);
           setAvailableBrands(response.availableBrands || []);
+          setAvailableInstrumentTypes(response.availableInstrumentTypes || []);
           setPagination(response.pagination || { page: 1, totalPages: 1, totalCount: 0 });
         } else {
           // Handle old response format for backward compatibility
           setListings(response);
           setAvailableModels([]);
           setAvailableBrands([]);
+          setAvailableInstrumentTypes([]);
           setPagination({ page: 1, totalPages: 1, totalCount: 0 });
         }
       })
@@ -104,6 +107,7 @@ export default function Home() {
             setFilters={setFilters}
             availableModels={availableModels}
             availableBrands={availableBrands}
+            availableInstrumentTypes={availableInstrumentTypes}
             onReset={handleReset}
             variant="hero"
           />

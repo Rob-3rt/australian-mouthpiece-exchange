@@ -17,6 +17,7 @@ export default function Messages() {
   const fetchConversations = async () => {
     try {
       const response = await api.get('/api/messages');
+      console.log('Fetched conversations:', response.data);
       setConversations(response.data);
     } catch (error) {
       console.error('Failed to fetch conversations:', error);
@@ -26,6 +27,7 @@ export default function Messages() {
   };
 
   const handleConversationClick = (conversationId, listingId) => {
+    console.log('Clicking conversation:', { conversationId, listingId });
     navigate(`/messages/${conversationId}${listingId ? `?listing=${listingId}` : ''}`);
   };
 

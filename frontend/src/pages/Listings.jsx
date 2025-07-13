@@ -8,6 +8,7 @@ export default function Listings() {
   const [listings, setListings] = useState([]);
   const [availableModels, setAvailableModels] = useState([]);
   const [availableBrands, setAvailableBrands] = useState([]);
+  const [availableInstrumentTypes, setAvailableInstrumentTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
@@ -22,10 +23,12 @@ export default function Listings() {
           setListings(response.listings);
           setAvailableModels(response.availableModels);
           setAvailableBrands(response.availableBrands || []);
+          setAvailableInstrumentTypes(response.availableInstrumentTypes || []);
         } else {
           setListings(response);
           setAvailableModels([]);
           setAvailableBrands([]);
+          setAvailableInstrumentTypes([]);
         }
       })
       .catch(err => {
@@ -48,6 +51,7 @@ export default function Listings() {
           setFilters={setFilters}
           availableModels={availableModels}
           availableBrands={availableBrands}
+          availableInstrumentTypes={availableInstrumentTypes}
           onReset={handleReset}
         />
         {/* Listings Grid */}

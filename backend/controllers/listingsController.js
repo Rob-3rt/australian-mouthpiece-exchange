@@ -59,11 +59,12 @@ exports.getAllListings = async (req, res) => {
       console.log('No user_id filter, showing only active listings');
     }
     
-    // Get available models and brands for autocomplete (excluding the current model/brand filters)
+    // Get available models, brands, and instrument types for autocomplete (excluding the current filters)
     const modelFilters = { ...filters };
     delete modelFilters.model; // Remove model filter to get all available models
     delete modelFilters.brand; // Remove brand filter to get all available brands
-    // For autocomplete, only show models and brands from active listings
+    delete modelFilters.instrument_type; // Remove instrument filter to get all available instruments
+    // For autocomplete, only show models, brands, and instruments from active listings
     if (!user_id || user_id === 'me') {
       modelFilters.status = 'active';
     }
@@ -79,6 +80,13 @@ exports.getAllListings = async (req, res) => {
       select: { brand: true },
       distinct: ['brand'],
       orderBy: { brand: 'asc' }
+    });
+    
+    const availableInstrumentTypes = await prisma.listing.findMany({
+      where: modelFilters,
+      select: { instrument_type: true },
+      distinct: ['instrument_type'],
+      orderBy: { instrument_type: 'asc' }
     });
     
     console.log('Filters being applied:', filters);
@@ -108,12 +116,13 @@ exports.getAllListings = async (req, res) => {
       paypal_link_effective: listing.paypal_link_override || listing.user.paypal_link || null
     }));
     
-    // Return both listings and available models/brands with pagination info
+    // Return both listings and available models/brands/instruments with pagination info
     console.log('Sending response with', listingsWithPaypal.length, 'listings');
     const response = {
       listings: listingsWithPaypal,
       availableModels: availableModels.map(item => item.model),
       availableBrands: availableBrands.map(item => item.brand),
+      availableInstrumentTypes: availableInstrumentTypes.map(item => item.instrument_type),
       pagination: {
         page,
         limit,
