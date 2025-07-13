@@ -18,9 +18,12 @@ import Messages from './pages/Messages';
 import Conversation from './pages/Conversation';
 import AdminDashboard from './pages/AdminDashboard';
 import MyListings from './pages/MyListings';
+import Terms from './pages/Terms';
+import About from './pages/About';
 import { useAuth } from './contexts/AuthContext';
 import { useNotifications } from './contexts/NotificationContext';
 import CreateListingModal from './components/CreateListingModal';
+import Footer from './components/Footer';
 import MailIcon from '@mui/icons-material/Mail';
 import api from './api/axios';
 
@@ -488,10 +491,13 @@ function App() {
             <Route path="/my-listings" element={<ProtectedRoute><MyListings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/about" element={<About />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Container>
       </Box>
+      <Footer />
     </Box>
   );
 }

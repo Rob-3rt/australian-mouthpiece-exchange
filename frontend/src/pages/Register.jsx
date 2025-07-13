@@ -424,7 +424,23 @@ export default function Register() {
                       }}
                     />
                   }
-                  label="I have read and agree to the Terms of Use and Disclaimer"
+                  label={
+                    <Box>
+                      I have read and agree to the{' '}
+                      <Link 
+                        to="/terms" 
+                        target="_blank"
+                        style={{ 
+                          color: '#4a1d3f',
+                          fontWeight: 600,
+                          textDecoration: 'none'
+                        }}
+                      >
+                        Terms and Conditions of Use
+                      </Link>{' '}
+                      and Disclaimer
+                    </Box>
+                  }
                   sx={{ 
                     mb: 3,
                     '& .MuiFormControlLabel-label': {
