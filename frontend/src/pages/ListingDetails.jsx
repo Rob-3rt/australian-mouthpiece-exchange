@@ -403,7 +403,7 @@ export default function ListingDetails() {
 
               {/* Action Buttons */}
               {user && user.user_id !== listing.user.user_id && (
-                <Box sx={{ width: '100%' }}>
+                <>
                   {/* Primary Action Buttons - Same Line */}
                   <Box sx={{ 
                     display: 'flex', 
@@ -433,6 +433,28 @@ export default function ListingDetails() {
                     >
                       Message Seller
                     </Button>
+                    {listing.open_to_loan && listing.status === 'active' && (
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setLoanModalOpen(true)}
+                        sx={{
+                          fontWeight: 600,
+                          textTransform: 'none',
+                          borderRadius: '8px',
+                          px: 3,
+                          py: 1.5,
+                          boxShadow: 'none',
+                          backgroundColor: '#1976d2',
+                          '&:hover': {
+                            backgroundColor: '#115293',
+                            boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)'
+                          }
+                        }}
+                      >
+                        Request Loan
+                      </Button>
+                    )}
                     {/* PayPal Button or Fallback */}
                     {listing.paypal_link_effective ? (
                       <a
@@ -518,7 +540,7 @@ export default function ListingDetails() {
                       Flag Listing
                     </Button>
                   </Box>
-                </Box>
+                </>
               )}
               
               {/* Show info if not logged in or is seller */}
@@ -738,16 +760,6 @@ export default function ListingDetails() {
         </Dialog>
 
         {/* Loan Request Button */}
-        {listing.open_to_loan && listing.status === 'active' && user && user.user_id !== listing.user.user_id && (
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2, mb: 2 }}
-            onClick={() => setLoanModalOpen(true)}
-          >
-            Request Loan
-          </Button>
-        )}
         <LoanRequestModal
           listing={listing}
           isOpen={loanModalOpen}

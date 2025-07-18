@@ -63,14 +63,41 @@ const LoanManagement = () => {
     }
   };
 
+  const handleApproveLoan = async (loanId) => {
+    try {
+      await axios.patch(`/api/loans/${loanId}/approve`);
+      fetchLoans();
+      fetchStats();
+    } catch (err) {
+      setError('Failed to approve loan');
+      console.error('Error approving loan:', err);
+    }
+  };
+
+  const handleRefuseLoan = async (loanId) => {
+    if (!window.confirm('Are you sure you want to refuse this loan request?')) {
+      return;
+    }
+    try {
+      await axios.patch(`/api/loans/${loanId}/refuse`);
+      fetchLoans();
+      fetchStats();
+    } catch (err) {
+      setError('Failed to refuse loan');
+      console.error('Error refusing loan:', err);
+    }
+  };
+
   const getStatusBadge = (status, expectedReturn) => {
     const isOverdue = status === 'active' && new Date(expectedReturn) < new Date();
-    
     if (isOverdue) {
       return <span className="badge bg-danger">Overdue</span>;
     }
-    
     switch (status) {
+      case 'pending':
+        return <span className="badge bg-info text-dark">Pending</span>;
+      case 'refused':
+        return <span className="badge bg-danger">Refused</span>;
       case 'active':
         return <span className="badge bg-success">Active</span>;
       case 'returned':
@@ -229,6 +256,22 @@ const LoanManagement = () => {
 
                   {/* Action Buttons */}
                   <div className="mt-3">
+                    {loan.status === 'pending' && loan.lender_id === user?.userId && (
+                      <>
+                        <button
+                          className="btn btn-success btn-sm me-2"
+                          onClick={() => handleApproveLoan(loan.loan_id)}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleRefuseLoan(loan.loan_id)}
+                        >
+                          Refuse
+                        </button>
+                      </>
+                    )}
                     {loan.status === 'active' && (
                       <>
                         {loan.borrower_id === user?.userId && (

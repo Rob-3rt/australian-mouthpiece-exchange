@@ -106,10 +106,10 @@ model Loan {
   listing_id       Int
   lender_id        Int       // Owner of the item
   borrower_id      Int       // Person borrowing the item
-  start_date       DateTime  @default(now())
+  start_date       DateTime  // Set by user when requesting loan
   expected_return_date DateTime
   actual_return_date DateTime?
-  status           String    @default("active") // active, returned, overdue, cancelled
+  status           String    @default("pending") // pending, on loan, returned, refused, cancelled, overdue
   notes            String?   // Any additional notes about the loan
   created_at       DateTime  @default(now())
   updated_at       DateTime  @updatedAt

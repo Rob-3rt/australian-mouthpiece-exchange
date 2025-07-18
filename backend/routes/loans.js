@@ -8,7 +8,13 @@ const {
   updateLoan,
   returnLoan,
   cancelLoan,
-  getLoanStats
+  getLoanStats,
+  approveLoan,
+  refuseLoan,
+  getIncomingRequests,
+  getOutgoingRequests,
+  getCurrentLoans,
+  getLoanHistory
 } = require('../controllers/loanController');
 
 // Apply auth middleware to all loan routes
@@ -34,5 +40,13 @@ router.patch('/:id/return', returnLoan);
 
 // Cancel loan (lender only)
 router.patch('/:id/cancel', cancelLoan);
+
+router.patch('/:id/approve', approveLoan);
+router.patch('/:id/refuse', refuseLoan);
+
+router.get('/incoming', getIncomingRequests);
+router.get('/outgoing', getOutgoingRequests);
+router.get('/current', getCurrentLoans);
+router.get('/history', getLoanHistory);
 
 module.exports = router; 
