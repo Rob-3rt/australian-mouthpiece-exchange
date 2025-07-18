@@ -4,8 +4,9 @@ import axios from '../api/axios';
 
 const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel, onSold }) => {
   const { listing, lender, borrower, status, start_date, expected_return_date, actual_return_date } = loan;
-  const isLender = user?.userId === lender.user_id;
-  const isBorrower = user?.userId === borrower.user_id;
+  const isLender = (user?.userId ?? user?.user_id) === lender.user_id;
+  const isBorrower = (user?.userId ?? user?.user_id) === borrower.user_id;
+  console.log('LoanCard:', { user, lender, isLender, status });
   const [messageOpen, setMessageOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [messageLoading, setMessageLoading] = useState(false);
