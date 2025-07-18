@@ -81,6 +81,16 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/admin/analytics', require('./routes/adminAnalytics'));
 app.use('/api/loans', require('./routes/loans'));
 
+// Global error handler for CORS and other errors
+app.use((err, req, res, next) => {
+  if (err.message === 'Not allowed by CORS') {
+    console.error('CORS error:', req.headers.origin);
+    res.status(403).json({ error: 'CORS error: Origin not allowed', origin: req.headers.origin });
+  } else {
+    next(err);
+  }
+});
+
 // Start server after running migrations
 async function startServer() {
   await runMigrations();
