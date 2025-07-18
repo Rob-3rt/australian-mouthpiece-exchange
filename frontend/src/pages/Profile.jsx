@@ -300,12 +300,6 @@ export default function Profile() {
       </Card>
       {/* My Loans Section */}
       <Box sx={{ mt: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: '#4a1d3f' }}>
-          My Loans
-        </Typography>
-        <LoanManagement />
-      </Box>
-      <Box mt={4}>
         <Typography variant="h6" gutterBottom>My Ratings</Typography>
         {ratingsLoading ? <CircularProgress /> : (
           ratings.length === 0 ? <Typography>No ratings yet.</Typography> : (
