@@ -26,6 +26,12 @@ router.get('/', getUserLoans);
 // Get loan statistics
 router.get('/stats', getLoanStats);
 
+// New endpoints for dashboard sections (must be before /:id)
+router.get('/incoming', getIncomingRequests);
+router.get('/outgoing', getOutgoingRequests);
+router.get('/current', getCurrentLoans);
+router.get('/history', getLoanHistory);
+
 // Get a specific loan
 router.get('/:id', getLoan);
 
@@ -43,10 +49,5 @@ router.patch('/:id/cancel', cancelLoan);
 
 router.patch('/:id/approve', approveLoan);
 router.patch('/:id/refuse', refuseLoan);
-
-router.get('/incoming', getIncomingRequests);
-router.get('/outgoing', getOutgoingRequests);
-router.get('/current', getCurrentLoans);
-router.get('/history', getLoanHistory);
 
 module.exports = router; 
