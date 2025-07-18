@@ -23,16 +23,22 @@ export default function Loans() {
     setError('');
     try {
       const [incomingRes, outgoingRes, currentRes, historyRes] = await Promise.all([
-        axios.get('/api/loans/incoming'),
-        axios.get('/api/loans/outgoing'),
-        axios.get('/api/loans/current'),
-        axios.get('/api/loans/history')
+        axios.get('/api/loans/incoming').then(res => { console.log('Incoming loans response:', res); return res; }),
+        axios.get('/api/loans/outgoing').then(res => { console.log('Outgoing loans response:', res); return res; }),
+        axios.get('/api/loans/current').then(res => { console.log('Current loans response:', res); return res; }),
+        axios.get('/api/loans/history').then(res => { console.log('Loan history response:', res); return res; })
       ]);
       setIncoming(incomingRes.data);
       setOutgoing(outgoingRes.data);
       setCurrent(currentRes.data);
       setHistory(historyRes.data);
     } catch (err) {
+      console.error('Error fetching loans:', err);
+      if (err.response) {
+        console.error('Error response data:', err.response.data);
+        console.error('Error response status:', err.response.status);
+        console.error('Error response headers:', err.response.headers);
+      }
       setError('Failed to fetch loans');
     } finally {
       setLoading(false);
