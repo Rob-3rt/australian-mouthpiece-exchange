@@ -50,6 +50,10 @@ export default function Loans() {
     await axios.patch(`/api/loans/${loanId}/cancel`);
     fetchLoans();
   };
+  const handleSold = async (listingId) => {
+    await axios.put(`/api/listings/${listingId}`, { status: 'sold' });
+    fetchLoans();
+  };
 
   return (
     <Box sx={{ backgroundColor: '#fff', minHeight: '100vh', py: { xs: 2, md: 6 } }}>
@@ -86,6 +90,7 @@ export default function Loans() {
                         onRefuse={handleRefuse}
                         onReturn={handleReturn}
                         onCancel={handleCancel}
+                        onSold={handleSold}
                       />
                     </Grid>
                   ))}

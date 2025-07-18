@@ -1,10 +1,16 @@
-import React from 'react';
-import { Card, CardContent, CardMedia, Typography, Box, Button } from '@mui/material';
+import React, { useState } from 'react';
+import { Card, CardContent, CardMedia, Typography, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
+import axios from '../api/axios';
 
-const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel }) => {
+const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel, onSold }) => {
   const { listing, lender, borrower, status, start_date, expected_return_date, actual_return_date } = loan;
   const isLender = user?.userId === lender.user_id;
   const isBorrower = user?.userId === borrower.user_id;
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageLoading, setMessageLoading] = useState(false);
+  const [messageError, setMessageError] = useState('');
+  const [messageSuccess, setMessageSuccess] = useState('');
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -14,6 +20,25 @@ const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel }) => {
       case 'cancelled': return 'warning.main';
       case 'refused': return 'error.main';
       default: return 'grey.500';
+    }
+  };
+
+  const handleSendMessage = async () => {
+    setMessageLoading(true);
+    setMessageError('');
+    setMessageSuccess('');
+    try {
+      await axios.post('/api/messages', {
+        to_user_id: isLender ? borrower.user_id : lender.user_id,
+        content: message,
+        listing_id: listing.listing_id
+      });
+      setMessageSuccess('Message sent!');
+      setMessage('');
+    } catch (err) {
+      setMessageError('Failed to send message');
+    } finally {
+      setMessageLoading(false);
     }
   };
 
@@ -54,7 +79,10 @@ const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel }) => {
             <b>{isLender ? 'Borrower' : 'Lender'}:</b> {isLender ? (borrower.nickname || borrower.name) : (lender.nickname || lender.name)}
           </Typography>
           {/* Action Buttons */}
-          <Box mt={2} display="flex" gap={1}>
+          <Box mt={2} display="flex" gap={1} flexWrap="wrap">
+            <Button variant="outlined" size="small" onClick={() => setMessageOpen(true)}>
+              Message
+            </Button>
             {status === 'pending' && isLender && (
               <>
                 <Button variant="contained" color="success" size="small" onClick={() => onApprove(loan.loan_id)}>Approve</Button>
@@ -65,11 +93,39 @@ const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel }) => {
               <Button variant="contained" color="success" size="small" onClick={() => onReturn(loan.loan_id)}>Mark as Returned</Button>
             )}
             {status === 'active' && isLender && (
-              <Button variant="contained" color="warning" size="small" onClick={() => onCancel(loan.loan_id)}>Cancel Loan</Button>
+              <>
+                <Button variant="contained" color="warning" size="small" onClick={() => onCancel(loan.loan_id)}>Cancel Loan</Button>
+                <Button variant="contained" color="primary" size="small" onClick={() => onSold(listing.listing_id)}>Mark as Sold</Button>
+                <Button variant="contained" color="success" size="small" onClick={() => onReturn(loan.loan_id)}>Returned</Button>
+              </>
             )}
           </Box>
         </CardContent>
       </Box>
+      {/* Message Modal */}
+      <Dialog open={messageOpen} onClose={() => setMessageOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Message {isLender ? (borrower.nickname || borrower.name) : (lender.nickname || lender.name)}</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Your Message"
+            multiline
+            rows={5}
+            fullWidth
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            disabled={messageLoading}
+            sx={{ mb: 2 }}
+          />
+          {messageError && <Typography color="error" variant="body2">{messageError}</Typography>}
+          {messageSuccess && <Typography color="success.main" variant="body2">{messageSuccess}</Typography>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMessageOpen(false)} disabled={messageLoading}>Cancel</Button>
+          <Button variant="contained" onClick={handleSendMessage} disabled={messageLoading || !message.trim()}>
+            {messageLoading ? 'Sending...' : 'Send'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 };
