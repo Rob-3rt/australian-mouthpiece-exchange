@@ -1,5 +1,6 @@
 const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
+const notificationService = require('../utils/notificationService');
 
 // Get all loans for a user (both as lender and borrower)
 exports.getUserLoans = async (req, res) => {
@@ -155,16 +156,16 @@ exports.createLoan = async (req, res) => {
       return res.status(400).json({ error: 'You cannot loan your own item.' });
     }
 
-    // Check if there's already an active loan for this listing
+    // Check if there's already a pending or active loan for this listing
     const existingLoan = await prisma.loan.findFirst({
       where: {
         listing_id: parseInt(listing_id),
-        status: 'active'
+        status: { in: ['active', 'pending'] }
       }
     });
 
     if (existingLoan) {
-      return res.status(400).json({ error: 'This item is already on loan.' });
+      return res.status(400).json({ error: 'This item already has a pending or active loan.' });
     }
 
     // Validate expected return date
@@ -175,7 +176,7 @@ exports.createLoan = async (req, res) => {
       return res.status(400).json({ error: 'Expected return date must be in the future.' });
     }
 
-    // Create the loan
+    // Create the loan with status 'pending'
     const loan = await prisma.loan.create({
       data: {
         listing_id: parseInt(listing_id),
@@ -183,7 +184,7 @@ exports.createLoan = async (req, res) => {
         borrower_id: borrowerId,
         expected_return_date: expectedReturn,
         notes: notes || null,
-        status: 'active'
+        status: 'pending'
       },
       include: {
         listing: {
@@ -198,29 +199,131 @@ exports.createLoan = async (req, res) => {
           select: {
             user_id: true,
             name: true,
-            nickname: true
+            nickname: true,
+            email: true
           }
         },
         borrower: {
           select: {
             user_id: true,
             name: true,
-            nickname: true
+            nickname: true,
+            email: true
           }
         }
       }
     });
 
-    // Update listing status to 'loaned'
-    await prisma.listing.update({
-      where: { listing_id: parseInt(listing_id) },
-      data: { status: 'loaned' }
+    // Send message/notification to lender
+    await prisma.message.create({
+      data: {
+        from_user_id: borrowerId,
+        to_user_id: loan.lender_id,
+        content: `Loan request for ${loan.listing.brand} ${loan.listing.model} (${loan.listing.instrument_type}) until ${expectedReturn.toLocaleDateString()}. Notes: ${notes || 'None'}`,
+        listing_id: loan.listing.listing_id
+      }
     });
+    if (notificationService.isEmailConfigured()) {
+      notificationService.sendMessageNotification(
+        loan.lender,
+        loan.borrower,
+        `Loan request for ${loan.listing.brand} ${loan.listing.model} (${loan.listing.instrument_type}) until ${expectedReturn.toLocaleDateString()}. Notes: ${notes || 'None'}`,
+        loan.listing
+      ).catch(() => {});
+    }
 
     res.status(201).json(loan);
   } catch (error) {
     console.error('Error creating loan:', error);
     res.status(500).json({ error: 'Failed to create loan.' });
+  }
+};
+
+// Approve a pending loan (lender only)
+exports.approveLoan = async (req, res) => {
+  try {
+    const loanId = parseInt(req.params.id);
+    const userId = req.user.userId;
+    const loan = await prisma.loan.findUnique({ where: { loan_id: loanId }, include: { listing: true, lender: true, borrower: true } });
+    if (!loan) return res.status(404).json({ error: 'Loan not found.' });
+    if (loan.lender_id !== userId) return res.status(403).json({ error: 'Only the lender can approve.' });
+    if (loan.status !== 'pending') return res.status(400).json({ error: 'Loan is not pending.' });
+    // Approve the loan
+    const updatedLoan = await prisma.loan.update({
+      where: { loan_id: loanId },
+      data: { status: 'active' },
+      include: {
+        listing: true,
+        lender: true,
+        borrower: true
+      }
+    });
+    // Set listing status to 'loaned'
+    await prisma.listing.update({ where: { listing_id: loan.listing_id }, data: { status: 'loaned' } });
+    // Send message/notification to borrower
+    await prisma.message.create({
+      data: {
+        from_user_id: loan.lender_id,
+        to_user_id: loan.borrower_id,
+        content: `Your loan request for ${loan.listing.brand} ${loan.listing.model} has been approved!`,
+        listing_id: loan.listing.listing_id
+      }
+    });
+    if (notificationService.isEmailConfigured()) {
+      notificationService.sendMessageNotification(
+        loan.borrower,
+        loan.lender,
+        `Your loan request for ${loan.listing.brand} ${loan.listing.model} has been approved!`,
+        loan.listing
+      ).catch(() => {});
+    }
+    res.json(updatedLoan);
+  } catch (error) {
+    console.error('Error approving loan:', error);
+    res.status(500).json({ error: 'Failed to approve loan.' });
+  }
+};
+
+// Refuse a pending loan (lender only)
+exports.refuseLoan = async (req, res) => {
+  try {
+    const loanId = parseInt(req.params.id);
+    const userId = req.user.userId;
+    const loan = await prisma.loan.findUnique({ where: { loan_id: loanId }, include: { listing: true, lender: true, borrower: true } });
+    if (!loan) return res.status(404).json({ error: 'Loan not found.' });
+    if (loan.lender_id !== userId) return res.status(403).json({ error: 'Only the lender can refuse.' });
+    if (loan.status !== 'pending') return res.status(400).json({ error: 'Loan is not pending.' });
+    // Refuse the loan
+    const updatedLoan = await prisma.loan.update({
+      where: { loan_id: loanId },
+      data: { status: 'refused' },
+      include: {
+        listing: true,
+        lender: true,
+        borrower: true
+      }
+    });
+    // Send message/notification to borrower
+    await prisma.message.create({
+      data: {
+        from_user_id: loan.lender_id,
+        to_user_id: loan.borrower_id,
+        content: `Your loan request for ${loan.listing.brand} ${loan.listing.model} has been refused.`,
+        listing_id: loan.listing.listing_id
+      }
+    });
+    if (notificationService.isEmailConfigured()) {
+      notificationService.sendMessageNotification(
+        loan.borrower,
+        loan.lender,
+        `Your loan request for ${loan.listing.brand} ${loan.listing.model} has been refused.`,
+        loan.listing
+      ).catch(() => {});
+    }
+    res.json(updatedLoan);
+  } catch (error) {
+    console.error('Error refusing loan:', error);
+    res.status(500).json({ error: 'Failed to refuse loan.' });
   }
 };
 
