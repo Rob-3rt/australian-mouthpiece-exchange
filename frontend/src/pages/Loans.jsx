@@ -141,10 +141,10 @@ export default function Loans() {
             </Box>
             <Box mb={6}>
               <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
-                Loans I'm Borrowing
+                Items I'm Borrowing
               </Typography>
               {loansBorrowing.length === 0 ? (
-                <Typography color="text.secondary">No current loans you are borrowing.</Typography>
+                <Typography color="text.secondary">No items you are borrowing.</Typography>
               ) : (
                 <Grid container spacing={3}>
                   {loansBorrowing.map(loan => (
@@ -165,10 +165,10 @@ export default function Loans() {
             </Box>
             <Box mb={6}>
               <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
-                Loans I've Lent Out
+                Items I've Lent Out
               </Typography>
               {loansLending.length === 0 ? (
-                <Typography color="text.secondary">No current loans you are lending out.</Typography>
+                <Typography color="text.secondary">No items you are lending out.</Typography>
               ) : (
                 <Grid container spacing={3}>
                   {loansLending.map(loan => (

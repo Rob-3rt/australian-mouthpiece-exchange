@@ -437,8 +437,8 @@ exports.returnLoan = async (req, res) => {
       return res.status(403).json({ error: 'Only the borrower can mark a loan as returned.' });
     }
 
-    if (loan.status !== 'active') {
-      return res.status(400).json({ error: 'Loan is not active.' });
+    if (loan.status !== 'active' && loan.status !== 'on loan') {
+      return res.status(400).json({ error: 'Loan is not currently on loan.' });
     }
 
     // Update loan status
