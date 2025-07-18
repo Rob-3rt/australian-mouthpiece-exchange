@@ -274,7 +274,11 @@ export default function MyListings() {
       await api.delete(`/api/listings/${listing.listing_id}`);
       setSnackbar({ open: true, message: 'Listing deleted.', severity: 'success' });
       fetchMyListings();
-    } catch {
+    } catch (err) {
+      console.error('Delete listing error:', err);
+      if (err.response) {
+        console.error('Delete listing error response:', err.response);
+      }
       setSnackbar({ open: true, message: 'Failed to delete listing.', severity: 'error' });
     }
   };

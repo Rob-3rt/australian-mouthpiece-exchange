@@ -290,6 +290,12 @@ exports.deleteListing = async (req, res) => {
     await prisma.listing.delete({ where: { listing_id: listing.listing_id } });
     res.json({ message: 'Listing deleted.' });
   } catch (err) {
+    console.error('Error deleting listing:', {
+      error: err,
+      listingId: req.params.id,
+      user: req.user,
+      stack: err?.stack
+    });
     res.status(500).json({ error: 'Failed to delete listing.' });
   }
 };
