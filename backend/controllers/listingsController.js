@@ -145,7 +145,7 @@ exports.createListing = async (req, res) => {
   try {
     // Debug log incoming data
     console.log('Incoming listing payload:', req.body);
-    const { instrument_type, brand, model, condition, price, description, photos, open_to_swap, paypal_link_override } = req.body;
+    const { instrument_type, brand, model, condition, price, description, photos, open_to_swap, open_to_loan, paypal_link_override } = req.body;
     console.log('instrument_type:', instrument_type);
     console.log('brand:', brand);
     console.log('model:', model);
@@ -170,6 +170,14 @@ exports.createListing = async (req, res) => {
       openToSwapBool = open_to_swap.toLowerCase() === 'true';
     } else {
       openToSwapBool = !!open_to_swap;
+    }
+
+    // Fix boolean conversion for open_to_loan
+    let openToLoanBool = false;
+    if (typeof open_to_loan === 'string') {
+      openToLoanBool = open_to_loan.toLowerCase() === 'true';
+    } else {
+      openToLoanBool = !!open_to_loan;
     }
     let validatedPaypal = null;
     if (paypal_link_override) {
@@ -202,6 +210,7 @@ exports.createListing = async (req, res) => {
         description,
         photos: photos || [],
         open_to_swap: openToSwapBool,
+        open_to_loan: openToLoanBool,
         status: 'active',
         paypal_link_override: validatedPaypal,
       },
@@ -236,7 +245,7 @@ exports.getListing = async (req, res) => {
 // Update a listing
 exports.updateListing = async (req, res) => {
   try {
-    const { instrument_type, brand, model, condition, price, description, photos, open_to_swap, status, paypal_link_override } = req.body;
+    const { instrument_type, brand, model, condition, price, description, photos, open_to_swap, open_to_loan, status, paypal_link_override } = req.body;
     const listing = await prisma.listing.findUnique({ where: { listing_id: Number(req.params.id) } });
     if (!listing) return res.status(404).json({ error: 'Listing not found.' });
     if (listing.user_id !== req.user.userId) return res.status(403).json({ error: 'Not authorized.' });
@@ -263,7 +272,7 @@ exports.updateListing = async (req, res) => {
     const updated = await prisma.listing.update({
       where: { listing_id: listing.listing_id },
       data: {
-        instrument_type, brand, model, condition, price: price ? parseFloat(price) : undefined, description, photos, open_to_swap, status, paypal_link_override: validatedPaypal
+        instrument_type, brand, model, condition, price: price ? parseFloat(price) : undefined, description, photos, open_to_swap, open_to_loan, status, paypal_link_override: validatedPaypal
       },
     });
     res.json(updated);
