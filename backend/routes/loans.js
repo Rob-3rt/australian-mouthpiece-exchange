@@ -49,5 +49,6 @@ router.patch('/:id/cancel', cancelLoan);
 
 router.patch('/:id/approve', approveLoan);
 router.patch('/:id/refuse', refuseLoan);
+router.patch('/:id/request_return', require('../controllers/loanController').requestReturn);
 
 module.exports = router; 

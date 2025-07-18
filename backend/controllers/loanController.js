@@ -704,3 +704,38 @@ exports.getLoanHistory = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch loan history.' });
   }
 }; 
+
+exports.requestReturn = async (req, res) => {
+  try {
+    const loanId = parseInt(req.params.id);
+    const userId = req.user.userId;
+    const loan = await prisma.loan.findUnique({
+      where: { loan_id: loanId },
+      include: { listing: true, lender: true, borrower: true }
+    });
+    if (!loan) return res.status(404).json({ error: 'Loan not found.' });
+    if (loan.lender_id !== userId) return res.status(403).json({ error: 'Only the lender can request return.' });
+    if (loan.status !== 'on loan' && loan.status !== 'active') return res.status(400).json({ error: 'Loan is not currently on loan.' });
+    // Send message/notification to borrower
+    await prisma.message.create({
+      data: {
+        from_user_id: loan.lender_id,
+        to_user_id: loan.borrower_id,
+        content: `The lender has requested you return the item: ${loan.listing.brand} ${loan.listing.model} (${loan.listing.instrument_type}). Please arrange return as soon as possible.`,
+        listing_id: loan.listing.listing_id
+      }
+    });
+    if (notificationService.isEmailConfigured()) {
+      notificationService.sendMessageNotification(
+        loan.borrower,
+        loan.lender,
+        `The lender has requested you return the item: ${loan.listing.brand} ${loan.listing.model} (${loan.listing.instrument_type}). Please arrange return as soon as possible.`,
+        loan.listing
+      ).catch(() => {});
+    }
+    res.json({ message: 'Return request sent to borrower.' });
+  } catch (error) {
+    console.error('Error in requestReturn:', error);
+    res.status(500).json({ error: 'Failed to request return.' });
+  }
+}; 
