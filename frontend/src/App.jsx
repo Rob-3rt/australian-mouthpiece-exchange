@@ -20,6 +20,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import MyListings from './pages/MyListings';
 import Terms from './pages/Terms';
 import About from './pages/About';
+import Loans from './pages/Loans';
 import { useAuth } from './contexts/AuthContext';
 import { useNotifications } from './contexts/NotificationContext';
 import CreateListingModal from './components/CreateListingModal';
@@ -145,6 +146,27 @@ function NavBar({ onOpenCreateListing }) {
                   }}
                 >
                   My Listings
+                </Button>
+              )}
+              {user && (
+                <Button 
+                  component={Link} 
+                  to="/loans"
+                  sx={{ 
+                    color: '#222222',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    textTransform: 'none',
+                    borderRadius: '22px',
+                    px: 3,
+                    py: 1,
+                    '&:hover': { 
+                      backgroundColor: '#f7f7f7',
+                      color: '#222222'
+                    }
+                  }}
+                >
+                  Loans
                 </Button>
               )}
               
@@ -489,6 +511,7 @@ function App() {
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/messages/:userId" element={<ProtectedRoute><Conversation /></ProtectedRoute>} />
             <Route path="/my-listings" element={<ProtectedRoute><MyListings /></ProtectedRoute>} />
+            <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/terms" element={<Terms />} />
