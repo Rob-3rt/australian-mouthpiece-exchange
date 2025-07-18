@@ -287,6 +287,8 @@ exports.deleteListing = async (req, res) => {
     const listing = await prisma.listing.findUnique({ where: { listing_id: Number(req.params.id) } });
     if (!listing) return res.status(404).json({ error: 'Listing not found.' });
     if (listing.user_id !== req.user.userId) return res.status(403).json({ error: 'Not authorized.' });
+    // Delete all related loans first
+    await prisma.loan.deleteMany({ where: { listing_id: listing.listing_id } });
     await prisma.listing.delete({ where: { listing_id: listing.listing_id } });
     res.json({ message: 'Listing deleted.' });
   } catch (err) {
