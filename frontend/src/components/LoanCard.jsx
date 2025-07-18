@@ -6,6 +6,7 @@ const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel, onSold,
   const { listing, lender, borrower, status, start_date, expected_return_date, actual_return_date } = loan;
   const isLender = (user?.userId ?? user?.user_id) === lender.user_id;
   const isBorrower = (user?.userId ?? user?.user_id) === borrower.user_id;
+  const isActive = status === 'active' || status === 'on loan';
   console.log('LoanCard:', { user, lender, isLender, status });
   const [messageOpen, setMessageOpen] = useState(false);
   const [message, setMessage] = useState('');
@@ -90,10 +91,12 @@ const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel, onSold,
                 <Button variant="contained" color="error" size="small" onClick={() => onRefuse(loan.loan_id)}>Refuse</Button>
               </>
             )}
-            {status === 'active' && isBorrower && (
-              <Button variant="contained" color="success" size="small" onClick={() => onReturn(loan.loan_id)}>Mark as Returned</Button>
+            {isActive && isBorrower && (
+              <Button variant="contained" color="success" size="small" onClick={() => onReturn(loan.loan_id)}>
+                Mark as Returned
+              </Button>
             )}
-            {status === 'active' && isLender && (
+            {isActive && isLender && (
               <>
                 <Button variant="contained" color="warning" size="small" onClick={() => onCancel(loan.loan_id)}>Cancel Loan</Button>
                 <Button variant="contained" color="primary" size="small" onClick={() => onSold(listing.listing_id)}>Mark as Sold</Button>
