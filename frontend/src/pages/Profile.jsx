@@ -12,6 +12,7 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import LoanManagement from '../components/LoanManagement';
 
 const STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
 
@@ -297,6 +298,13 @@ export default function Profile() {
           )}
         </CardContent>
       </Card>
+      {/* My Loans Section */}
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: '#4a1d3f' }}>
+          My Loans
+        </Typography>
+        <LoanManagement />
+      </Box>
       <Box mt={4}>
         <Typography variant="h6" gutterBottom>My Ratings</Typography>
         {ratingsLoading ? <CircularProgress /> : (

@@ -28,7 +28,8 @@ export default function CreateListingModal({ open, onClose, onSuccess }) {
       price: '',
       description: '',
       photos: [],
-      open_to_swap: 'false'
+      open_to_swap: 'false',
+      open_to_loan: 'false'
     }
   });
   const [selectedImages, setSelectedImages] = useState([]);
@@ -119,7 +120,8 @@ export default function CreateListingModal({ open, onClose, onSuccess }) {
         price: data.price,
         description: data.description,
         photos,
-        open_to_swap: data.open_to_swap
+        open_to_swap: data.open_to_swap,
+        open_to_loan: data.open_to_loan
       };
       const res = await api.post('/api/listings', payload);
       setSnackbar({ open: true, message: 'Listing created!', severity: 'success' });
@@ -446,6 +448,27 @@ export default function CreateListingModal({ open, onClose, onSuccess }) {
             fullWidth 
             margin="normal" 
             {...register('open_to_swap')}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '8px',
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#4a1d3f'
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#4a1d3f'
+                }
+              }
+            }}
+          >
+            <MenuItem value="true">Yes</MenuItem>
+            <MenuItem value="false">No</MenuItem>
+          </TextField>
+          <TextField 
+            label="Open to Loan" 
+            select 
+            fullWidth 
+            margin="normal" 
+            {...register('open_to_loan')}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '8px',

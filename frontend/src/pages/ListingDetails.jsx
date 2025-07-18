@@ -7,6 +7,7 @@ import FlagIcon from '@mui/icons-material/Flag';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import CloseIcon from '@mui/icons-material/Close';
+import LoanRequestModal from '../components/LoanRequestModal';
 
 export default function ListingDetails() {
   const { id } = useParams();
@@ -29,7 +30,7 @@ export default function ListingDetails() {
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const [currentPhoto, setCurrentPhoto] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
-
+  const [loanModalOpen, setLoanModalOpen] = useState(false);
 
 
   useEffect(() => {
@@ -735,6 +736,24 @@ export default function ListingDetails() {
             <Button variant="contained" onClick={handleBuy}>Confirm</Button>
           </DialogActions>
         </Dialog>
+
+        {/* Loan Request Button */}
+        {listing.open_to_loan && listing.status === 'active' && user && user.user_id !== listing.user.user_id && (
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2, mb: 2 }}
+            onClick={() => setLoanModalOpen(true)}
+          >
+            Request Loan
+          </Button>
+        )}
+        <LoanRequestModal
+          listing={listing}
+          isOpen={loanModalOpen}
+          onClose={() => setLoanModalOpen(false)}
+          onSuccess={() => setSnackbar({ open: true, message: 'Loan request sent!', severity: 'success' })}
+        />
 
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>Seller Ratings</Typography>

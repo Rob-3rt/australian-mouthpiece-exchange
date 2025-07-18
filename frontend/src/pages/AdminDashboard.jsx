@@ -36,6 +36,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import api from '../api/axios.js';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import AdminAnalytics from './AdminAnalytics';
 
 export default function AdminDashboard() {
   const { user: currentUser } = useAuth();
@@ -43,7 +44,7 @@ export default function AdminDashboard() {
   const [flags, setFlags] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('flags'); // 'flags' or 'users'
+  const [activeTab, setActiveTab] = useState('flags'); // 'flags', 'users', 'analytics'
   const [editUserDialog, setEditUserDialog] = useState({ open: false, user: null });
   const navigate = useNavigate();
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -200,15 +201,11 @@ export default function AdminDashboard() {
           >
             Admin Dashboard
           </Typography>
-          <Typography 
-            variant="body1" 
-            sx={{ 
-              color: '#717171',
-              fontSize: '18px'
-            }}
-          >
-            Manage flagged content and moderate the platform
-          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <Button variant={activeTab === 'flags' ? 'contained' : 'outlined'} onClick={() => setActiveTab('flags')}>Flags</Button>
+            <Button variant={activeTab === 'users' ? 'contained' : 'outlined'} onClick={() => setActiveTab('users')}>Users</Button>
+            <Button variant={activeTab === 'analytics' ? 'contained' : 'outlined'} onClick={() => setActiveTab('analytics')}>Analytics</Button>
+          </Box>
         </Box>
 
         {/* Statistics Cards */}
@@ -364,6 +361,26 @@ export default function AdminDashboard() {
                 startIcon={<PersonIcon />}
               >
                 User Management
+              </Button>
+              <Button
+                onClick={() => setActiveTab('analytics')}
+                sx={{
+                  color: activeTab === 'analytics' ? '#4a1d3f' : '#717171',
+                  borderBottom: activeTab === 'analytics' ? '2px solid #4a1d3f' : '2px solid transparent',
+                  borderRadius: 0,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  py: 2,
+                  px: 3,
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                    color: '#4a1d3f'
+                  }
+                }}
+                startIcon={<FlagIcon />}
+              >
+                Analytics
               </Button>
             </Box>
           </Box>
@@ -681,6 +698,11 @@ export default function AdminDashboard() {
               </TableContainer>
             )}
           </Box>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <AdminAnalytics />
         )}
 
         {/* Edit User Dialog */}
