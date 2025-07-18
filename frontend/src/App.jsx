@@ -421,6 +421,16 @@ function NavBar({ onOpenCreateListing }) {
                   >
                     My Listings
                   </MenuItem>
+                  <MenuItem 
+                    onClick={() => { handleMobileMenuClose(); navigate('/loans'); }}
+                    sx={{ 
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      py: 1.5
+                    }}
+                  >
+                    Loans
+                  </MenuItem>
                   {user.is_admin && (
                     <MenuItem 
                       onClick={() => { handleMobileMenuClose(); navigate('/admin'); }}
