@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardMedia, Typography, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
 import axios from '../api/axios';
 
-const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel, onSold }) => {
+const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel, onSold, onRequestReturn }) => {
   const { listing, lender, borrower, status, start_date, expected_return_date, actual_return_date } = loan;
   const isLender = (user?.userId ?? user?.user_id) === lender.user_id;
   const isBorrower = (user?.userId ?? user?.user_id) === borrower.user_id;
@@ -98,6 +98,11 @@ const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel, onSold 
                 <Button variant="contained" color="warning" size="small" onClick={() => onCancel(loan.loan_id)}>Cancel Loan</Button>
                 <Button variant="contained" color="primary" size="small" onClick={() => onSold(listing.listing_id)}>Mark as Sold</Button>
                 <Button variant="contained" color="success" size="small" onClick={() => onReturn(loan.loan_id)}>Returned</Button>
+                {onRequestReturn && (
+                  <Button variant="outlined" color="info" size="small" onClick={() => onRequestReturn(loan)}>
+                    Request Return
+                  </Button>
+                )}
               </>
             )}
           </Box>

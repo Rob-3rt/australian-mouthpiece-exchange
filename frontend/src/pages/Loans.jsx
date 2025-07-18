@@ -65,6 +65,13 @@ export default function Loans() {
     await axios.put(`/api/listings/${listingId}`, { status: 'sold' });
     fetchLoans();
   };
+  const handleRequestReturn = async (loanId) => {
+    await axios.patch(`/api/loans/${loanId}/request_return`);
+    fetchLoans();
+  };
+
+  const loansBorrowing = current.filter(loan => (user?.userId ?? user?.user_id) === loan.borrower.user_id);
+  const loansLending = current.filter(loan => (user?.userId ?? user?.user_id) === loan.lender.user_id);
 
   return (
     <Box sx={{ backgroundColor: '#fff', minHeight: '100vh', py: { xs: 2, md: 6 } }}>
@@ -134,13 +141,13 @@ export default function Loans() {
             </Box>
             <Box mb={6}>
               <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
-                Current Loans
+                Loans I'm Borrowing
               </Typography>
-              {current.length === 0 ? (
-                <Typography color="text.secondary">No current loans.</Typography>
+              {loansBorrowing.length === 0 ? (
+                <Typography color="text.secondary">No current loans you are borrowing.</Typography>
               ) : (
                 <Grid container spacing={3}>
-                  {current.map(loan => (
+                  {loansBorrowing.map(loan => (
                     <Grid item xs={12} md={6} key={loan.loan_id}>
                       <LoanCard
                         loan={loan}
@@ -150,6 +157,31 @@ export default function Loans() {
                         onReturn={handleReturn}
                         onCancel={handleCancel}
                         onSold={handleSold}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </Box>
+            <Box mb={6}>
+              <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
+                Loans I've Lent Out
+              </Typography>
+              {loansLending.length === 0 ? (
+                <Typography color="text.secondary">No current loans you are lending out.</Typography>
+              ) : (
+                <Grid container spacing={3}>
+                  {loansLending.map(loan => (
+                    <Grid item xs={12} md={6} key={loan.loan_id}>
+                      <LoanCard
+                        loan={loan}
+                        user={user}
+                        onApprove={handleApprove}
+                        onRefuse={handleRefuse}
+                        onReturn={handleReturn}
+                        onCancel={handleCancel}
+                        onSold={handleSold}
+                        onRequestReturn={handleRequestReturn}
                       />
                     </Grid>
                   ))}
