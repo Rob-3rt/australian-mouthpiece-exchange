@@ -609,8 +609,15 @@ exports.getLoanStats = async (req, res) => {
 
 // New endpoints for dashboard sections
 exports.getIncomingRequests = async (req, res) => {
+  console.log('getIncomingRequests called');
+  console.log('req.user:', req.user);
+  console.log('req.headers:', req.headers);
   try {
-    const userId = req.user.userId;
+    const userId = req.user && req.user.userId;
+    if (!userId) {
+      console.log('No userId found in req.user');
+      return res.status(401).json({ error: 'Not authenticated.' });
+    }
     const loans = await prisma.loan.findMany({
       where: { lender_id: userId, status: 'pending' },
       include: { listing: true, lender: true, borrower: true },
@@ -618,12 +625,20 @@ exports.getIncomingRequests = async (req, res) => {
     });
     res.json(loans);
   } catch (error) {
+    console.error('Error in getIncomingRequests:', error);
     res.status(500).json({ error: 'Failed to fetch incoming requests.' });
   }
 };
 exports.getOutgoingRequests = async (req, res) => {
+  console.log('getOutgoingRequests called');
+  console.log('req.user:', req.user);
+  console.log('req.headers:', req.headers);
   try {
-    const userId = req.user.userId;
+    const userId = req.user && req.user.userId;
+    if (!userId) {
+      console.log('No userId found in req.user');
+      return res.status(401).json({ error: 'Not authenticated.' });
+    }
     const loans = await prisma.loan.findMany({
       where: { borrower_id: userId, status: 'pending' },
       include: { listing: true, lender: true, borrower: true },
@@ -631,12 +646,20 @@ exports.getOutgoingRequests = async (req, res) => {
     });
     res.json(loans);
   } catch (error) {
+    console.error('Error in getOutgoingRequests:', error);
     res.status(500).json({ error: 'Failed to fetch outgoing requests.' });
   }
 };
 exports.getCurrentLoans = async (req, res) => {
+  console.log('getCurrentLoans called');
+  console.log('req.user:', req.user);
+  console.log('req.headers:', req.headers);
   try {
-    const userId = req.user.userId;
+    const userId = req.user && req.user.userId;
+    if (!userId) {
+      console.log('No userId found in req.user');
+      return res.status(401).json({ error: 'Not authenticated.' });
+    }
     const loans = await prisma.loan.findMany({
       where: {
         OR: [
@@ -650,12 +673,20 @@ exports.getCurrentLoans = async (req, res) => {
     });
     res.json(loans);
   } catch (error) {
+    console.error('Error in getCurrentLoans:', error);
     res.status(500).json({ error: 'Failed to fetch current loans.' });
   }
 };
 exports.getLoanHistory = async (req, res) => {
+  console.log('getLoanHistory called');
+  console.log('req.user:', req.user);
+  console.log('req.headers:', req.headers);
   try {
-    const userId = req.user.userId;
+    const userId = req.user && req.user.userId;
+    if (!userId) {
+      console.log('No userId found in req.user');
+      return res.status(401).json({ error: 'Not authenticated.' });
+    }
     const loans = await prisma.loan.findMany({
       where: {
         OR: [
@@ -669,6 +700,7 @@ exports.getLoanHistory = async (req, res) => {
     });
     res.json(loans);
   } catch (error) {
+    console.error('Error in getLoanHistory:', error);
     res.status(500).json({ error: 'Failed to fetch loan history.' });
   }
 }; 
