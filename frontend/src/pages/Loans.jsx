@@ -69,6 +69,10 @@ export default function Loans() {
     await axios.patch(`/api/loans/${loanId}/request_return`);
     fetchLoans();
   };
+  const handleConfirmReturn = async (loanId) => {
+    await axios.patch(`/api/loans/${loanId}/confirm_return`);
+    fetchLoans();
+  };
 
   const loansBorrowing = current.filter(loan => (user?.userId ?? user?.user_id) === loan.borrower.user_id);
   const loansLending = current.filter(loan => (user?.userId ?? user?.user_id) === loan.lender.user_id);
@@ -182,6 +186,7 @@ export default function Loans() {
                         onCancel={handleCancel}
                         onSold={handleSold}
                         onRequestReturn={handleRequestReturn}
+                        onConfirmReturn={handleConfirmReturn}
                       />
                     </Grid>
                   ))}

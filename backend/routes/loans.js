@@ -50,5 +50,6 @@ router.patch('/:id/cancel', cancelLoan);
 router.patch('/:id/approve', approveLoan);
 router.patch('/:id/refuse', refuseLoan);
 router.patch('/:id/request_return', require('../controllers/loanController').requestReturn);
+router.patch('/:id/confirm_return', require('../controllers/loanController').confirmReturn);
 
 module.exports = router; 

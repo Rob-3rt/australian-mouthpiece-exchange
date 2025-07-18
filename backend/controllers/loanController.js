@@ -422,68 +422,98 @@ exports.returnLoan = async (req, res) => {
   try {
     const loanId = parseInt(req.params.id);
     const userId = req.user.userId;
-
     const loan = await prisma.loan.findUnique({
       where: { loan_id: loanId },
-      include: { listing: true }
+      include: { listing: true, lender: true, borrower: true }
     });
-
     if (!loan) {
       return res.status(404).json({ error: 'Loan not found.' });
     }
-
     // Only the borrower can mark as returned
     if (loan.borrower_id !== userId) {
       return res.status(403).json({ error: 'Only the borrower can mark a loan as returned.' });
     }
-
     if (loan.status !== 'active' && loan.status !== 'on loan') {
       return res.status(400).json({ error: 'Loan is not currently on loan.' });
     }
-
-    // Update loan status
+    // Set status to 'return_pending' and notify lender
     const updatedLoan = await prisma.loan.update({
       where: { loan_id: loanId },
+      data: { status: 'return_pending' },
+      include: { listing: true, lender: true, borrower: true }
+    });
+    await prisma.message.create({
       data: {
-        status: 'returned',
-        actual_return_date: new Date()
-      },
-      include: {
-        listing: {
-          select: {
-            listing_id: true,
-            instrument_type: true,
-            brand: true,
-            model: true
-          }
-        },
-        lender: {
-          select: {
-            user_id: true,
-            name: true,
-            nickname: true
-          }
-        },
-        borrower: {
-          select: {
-            user_id: true,
-            name: true,
-            nickname: true
-          }
-        }
+        from_user_id: loan.borrower_id,
+        to_user_id: loan.lender_id,
+        content: `The borrower has marked the item as returned for ${loan.listing.brand} ${loan.listing.model}. Please confirm receipt.`,
+        listing_id: loan.listing.listing_id
       }
     });
-
-    // Make listing available again
-    await prisma.listing.update({
-      where: { listing_id: loan.listing_id },
-      data: { status: 'active' }
-    });
-
+    if (notificationService.isEmailConfigured()) {
+      notificationService.sendMessageNotification(
+        loan.lender,
+        loan.borrower,
+        `The borrower has marked the item as returned for ${loan.listing.brand} ${loan.listing.model}. Please confirm receipt.`,
+        loan.listing
+      ).catch(() => {});
+    }
     res.json(updatedLoan);
   } catch (error) {
     console.error('Error returning loan:', error);
     res.status(500).json({ error: 'Failed to return loan.' });
+  }
+};
+
+exports.confirmReturn = async (req, res) => {
+  try {
+    const loanId = parseInt(req.params.id);
+    const userId = req.user.userId;
+    const loan = await prisma.loan.findUnique({
+      where: { loan_id: loanId },
+      include: { listing: true, lender: true, borrower: true }
+    });
+    if (!loan) {
+      return res.status(404).json({ error: 'Loan not found.' });
+    }
+    // Only the lender can confirm return
+    if (loan.lender_id !== userId) {
+      return res.status(403).json({ error: 'Only the lender can confirm return.' });
+    }
+    if (loan.status !== 'return_pending') {
+      return res.status(400).json({ error: 'Loan is not pending return confirmation.' });
+    }
+    // Set status to 'returned', set actual_return_date, notify borrower
+    const updatedLoan = await prisma.loan.update({
+      where: { loan_id: loanId },
+      data: { status: 'returned', actual_return_date: new Date() },
+      include: { listing: true, lender: true, borrower: true }
+    });
+    await prisma.message.create({
+      data: {
+        from_user_id: loan.lender_id,
+        to_user_id: loan.borrower_id,
+        content: `The lender has confirmed the return of ${loan.listing.brand} ${loan.listing.model}. Thank you!`,
+        listing_id: loan.listing.listing_id
+      }
+    });
+    if (notificationService.isEmailConfigured()) {
+      notificationService.sendMessageNotification(
+        loan.borrower,
+        loan.lender,
+        `The lender has confirmed the return of ${loan.listing.brand} ${loan.listing.model}. Thank you!`,
+        loan.listing
+      ).catch(() => {});
+    }
+    // Make listing available again
+    await prisma.listing.update({
+      where: { listing_id: loan.listing.listing_id },
+      data: { status: 'active' }
+    });
+    res.json(updatedLoan);
+  } catch (error) {
+    console.error('Error confirming return:', error);
+    res.status(500).json({ error: 'Failed to confirm return.' });
   }
 };
 
