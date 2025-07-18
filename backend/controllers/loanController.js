@@ -174,6 +174,8 @@ exports.createLoan = async (req, res) => {
     const startDate = new Date(start_date);
     const expectedReturn = new Date(expected_return_date);
     const now = new Date();
+    startDate.setHours(0,0,0,0);
+    now.setHours(0,0,0,0);
     if (startDate < now) {
       return res.status(400).json({ error: 'Start date must be today or in the future.' });
     }
