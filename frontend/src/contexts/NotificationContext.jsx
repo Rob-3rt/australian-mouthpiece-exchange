@@ -162,9 +162,19 @@ export const NotificationProvider = ({ children }) => {
         }
       });
       if (response.ok) {
-        const conversations = await response.json();
-        const totalUnread = conversations.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);
-        setUnreadCount(totalUnread);
+        // Try to parse JSON, but handle HTML error pages gracefully
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const conversations = await response.json();
+          const totalUnread = conversations.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);
+          setUnreadCount(totalUnread);
+        } else {
+          const text = await response.text();
+          console.error('Unread count API did not return JSON:', text);
+        }
+      } else {
+        const text = await response.text();
+        console.error('Unread count API error:', response.status, text);
       }
     } catch (error) {
       console.error('Failed to refresh unread count:', error);

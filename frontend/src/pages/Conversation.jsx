@@ -99,7 +99,8 @@ export default function Conversation() {
     }
   };
 
-  const sortedMessages = [...messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  // Sort messages newest to oldest (descending by timestamp)
+  const sortedMessages = [...messages].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   if (loading) {
     return (
