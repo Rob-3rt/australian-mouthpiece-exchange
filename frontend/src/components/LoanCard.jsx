@@ -102,7 +102,7 @@ const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel, onSold,
                 <Button variant="contained" color="primary" size="small" onClick={() => onSold(listing.listing_id)}>Mark as Sold</Button>
                 <Button variant="contained" color="success" size="small" onClick={() => onReturn(loan.loan_id)}>Returned</Button>
                 {onRequestReturn && (
-                  <Button variant="outlined" color="info" size="small" onClick={() => onRequestReturn(loan)}>
+                  <Button variant="outlined" color="info" size="small" onClick={() => onRequestReturn(loan.loan_id)}>
                     Request Return
                   </Button>
                 )}
