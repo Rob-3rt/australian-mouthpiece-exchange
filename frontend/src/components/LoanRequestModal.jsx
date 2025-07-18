@@ -35,6 +35,7 @@ const LoanRequestModal = ({ listing, isOpen, onClose, onSuccess }) => {
       setError('');
       await axios.post('/api/loans', {
         listing_id: listing.listing_id,
+        start_date: new Date().toISOString().split('T')[0], // today
         expected_return_date: expectedReturnDate,
         notes: notes.trim() || null
       });
