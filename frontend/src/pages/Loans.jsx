@@ -6,8 +6,10 @@ import LoanCard from '../components/LoanCard';
 
 export default function Loans() {
   const { user } = useAuth();
-  const [loansGiven, setLoansGiven] = useState([]);
-  const [loansReceived, setLoansReceived] = useState([]);
+  const [incoming, setIncoming] = useState([]);
+  const [outgoing, setOutgoing] = useState([]);
+  const [current, setCurrent] = useState([]);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -20,12 +22,16 @@ export default function Loans() {
     setLoading(true);
     setError('');
     try {
-      const [givenRes, receivedRes] = await Promise.all([
-        axios.get('/api/loans?type=given'),
-        axios.get('/api/loans?type=received')
+      const [incomingRes, outgoingRes, currentRes, historyRes] = await Promise.all([
+        axios.get('/api/loans/incoming'),
+        axios.get('/api/loans/outgoing'),
+        axios.get('/api/loans/current'),
+        axios.get('/api/loans/history')
       ]);
-      setLoansGiven(givenRes.data);
-      setLoansReceived(receivedRes.data);
+      setIncoming(incomingRes.data);
+      setOutgoing(outgoingRes.data);
+      setCurrent(currentRes.data);
+      setHistory(historyRes.data);
     } catch (err) {
       setError('Failed to fetch loans');
     } finally {
@@ -33,7 +39,6 @@ export default function Loans() {
     }
   };
 
-  // Action handlers (reuse from LoanManagement)
   const handleApprove = async (loanId) => {
     await axios.patch(`/api/loans/${loanId}/approve`);
     fetchLoans();
@@ -75,13 +80,13 @@ export default function Loans() {
           <>
             <Box mb={6}>
               <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
-                Loaned Out
+                Incoming Requests
               </Typography>
-              {loansGiven.length === 0 ? (
-                <Typography color="text.secondary">No items currently loaned out.</Typography>
+              {incoming.length === 0 ? (
+                <Typography color="text.secondary">No incoming loan requests.</Typography>
               ) : (
                 <Grid container spacing={3}>
-                  {loansGiven.map(loan => (
+                  {incoming.map(loan => (
                     <Grid item xs={12} md={6} key={loan.loan_id}>
                       <LoanCard
                         loan={loan}
@@ -99,13 +104,13 @@ export default function Loans() {
             </Box>
             <Box mb={6}>
               <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
-                On Loan to Me
+                Outgoing Requests
               </Typography>
-              {loansReceived.length === 0 ? (
-                <Typography color="text.secondary">No items currently on loan to you.</Typography>
+              {outgoing.length === 0 ? (
+                <Typography color="text.secondary">No outgoing loan requests.</Typography>
               ) : (
                 <Grid container spacing={3}>
-                  {loansReceived.map(loan => (
+                  {outgoing.map(loan => (
                     <Grid item xs={12} md={6} key={loan.loan_id}>
                       <LoanCard
                         loan={loan}
@@ -114,6 +119,55 @@ export default function Loans() {
                         onRefuse={handleRefuse}
                         onReturn={handleReturn}
                         onCancel={handleCancel}
+                        onSold={handleSold}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </Box>
+            <Box mb={6}>
+              <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
+                Current Loans
+              </Typography>
+              {current.length === 0 ? (
+                <Typography color="text.secondary">No current loans.</Typography>
+              ) : (
+                <Grid container spacing={3}>
+                  {current.map(loan => (
+                    <Grid item xs={12} md={6} key={loan.loan_id}>
+                      <LoanCard
+                        loan={loan}
+                        user={user}
+                        onApprove={handleApprove}
+                        onRefuse={handleRefuse}
+                        onReturn={handleReturn}
+                        onCancel={handleCancel}
+                        onSold={handleSold}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </Box>
+            <Box mb={6}>
+              <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
+                Loan History
+              </Typography>
+              {history.length === 0 ? (
+                <Typography color="text.secondary">No loan history.</Typography>
+              ) : (
+                <Grid container spacing={3}>
+                  {history.map(loan => (
+                    <Grid item xs={12} md={6} key={loan.loan_id}>
+                      <LoanCard
+                        loan={loan}
+                        user={user}
+                        onApprove={handleApprove}
+                        onRefuse={handleRefuse}
+                        onReturn={handleReturn}
+                        onCancel={handleCancel}
+                        onSold={handleSold}
                       />
                     </Grid>
                   ))}
