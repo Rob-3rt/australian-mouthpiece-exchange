@@ -114,7 +114,7 @@ model Loan {
   created_at       DateTime  @default(now())
   updated_at       DateTime  @updatedAt
   
-  listing          Listing   @relation(fields: [listing_id], references: [listing_id])
+  listing          Listing   @relation(fields: [listing_id], references: [listing_id], onDelete: Cascade)
   lender           User      @relation("LoansGiven", fields: [lender_id], references: [user_id])
   borrower         User      @relation("LoansReceived", fields: [borrower_id], references: [user_id])
 }
