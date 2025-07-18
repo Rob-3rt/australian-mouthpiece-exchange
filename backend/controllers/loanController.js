@@ -69,6 +69,9 @@ exports.getUserLoans = async (req, res) => {
 exports.getLoan = async (req, res) => {
   try {
     const loanId = parseInt(req.params.id);
+    if (!loanId) {
+      return res.status(400).json({ error: 'Loan ID is required.' });
+    }
     const userId = req.user.userId;
 
     const loan = await prisma.loan.findUnique({
@@ -126,12 +129,12 @@ exports.getLoan = async (req, res) => {
 // Create a new loan request
 exports.createLoan = async (req, res) => {
   try {
-    const { listing_id, expected_return_date, notes } = req.body;
+    const { listing_id, start_date, expected_return_date, notes } = req.body;
     const borrowerId = req.user.userId;
 
     // Validate required fields
-    if (!listing_id || !expected_return_date) {
-      return res.status(400).json({ error: 'Listing ID and expected return date are required.' });
+    if (!listing_id || !start_date || !expected_return_date) {
+      return res.status(400).json({ error: 'Listing ID, start date, and expected return date are required.' });
     }
 
     // Check if listing exists and is available for loan
@@ -168,12 +171,14 @@ exports.createLoan = async (req, res) => {
       return res.status(400).json({ error: 'This item already has a pending or active loan.' });
     }
 
-    // Validate expected return date
+    const startDate = new Date(start_date);
     const expectedReturn = new Date(expected_return_date);
     const now = new Date();
-    
-    if (expectedReturn <= now) {
-      return res.status(400).json({ error: 'Expected return date must be in the future.' });
+    if (startDate < now) {
+      return res.status(400).json({ error: 'Start date must be today or in the future.' });
+    }
+    if (expectedReturn <= startDate) {
+      return res.status(400).json({ error: 'Expected return date must be after start date.' });
     }
 
     // Create the loan with status 'pending'
@@ -182,6 +187,7 @@ exports.createLoan = async (req, res) => {
         listing_id: parseInt(listing_id),
         lender_id: listing.user_id,
         borrower_id: borrowerId,
+        start_date: startDate,
         expected_return_date: expectedReturn,
         notes: notes || null,
         status: 'pending'
@@ -219,7 +225,7 @@ exports.createLoan = async (req, res) => {
       data: {
         from_user_id: borrowerId,
         to_user_id: loan.lender_id,
-        content: `Loan request for ${loan.listing.brand} ${loan.listing.model} (${loan.listing.instrument_type}) until ${expectedReturn.toLocaleDateString()}. Notes: ${notes || 'None'}`,
+        content: `Loan request for ${loan.listing.brand} ${loan.listing.model} (${loan.listing.instrument_type}) starting ${startDate.toLocaleDateString()} until ${expectedReturn.toLocaleDateString()}. Notes: ${notes || 'None'}`,
         listing_id: loan.listing.listing_id
       }
     });
@@ -227,7 +233,7 @@ exports.createLoan = async (req, res) => {
       notificationService.sendMessageNotification(
         loan.lender,
         loan.borrower,
-        `Loan request for ${loan.listing.brand} ${loan.listing.model} (${loan.listing.instrument_type}) until ${expectedReturn.toLocaleDateString()}. Notes: ${notes || 'None'}`,
+        `Loan request for ${loan.listing.brand} ${loan.listing.model} (${loan.listing.instrument_type}) starting ${startDate.toLocaleDateString()} until ${expectedReturn.toLocaleDateString()}. Notes: ${notes || 'None'}`,
         loan.listing
       ).catch(() => {});
     }
@@ -251,7 +257,7 @@ exports.approveLoan = async (req, res) => {
     // Approve the loan
     const updatedLoan = await prisma.loan.update({
       where: { loan_id: loanId },
-      data: { status: 'active' },
+      data: { status: 'on loan' },
       include: {
         listing: true,
         lender: true,
@@ -598,5 +604,71 @@ exports.getLoanStats = async (req, res) => {
   } catch (error) {
     console.error('Error fetching loan stats:', error);
     res.status(500).json({ error: 'Failed to fetch loan statistics.' });
+  }
+}; 
+
+// New endpoints for dashboard sections
+exports.getIncomingRequests = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const loans = await prisma.loan.findMany({
+      where: { lender_id: userId, status: 'pending' },
+      include: { listing: true, lender: true, borrower: true },
+      orderBy: { created_at: 'desc' }
+    });
+    res.json(loans);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch incoming requests.' });
+  }
+};
+exports.getOutgoingRequests = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const loans = await prisma.loan.findMany({
+      where: { borrower_id: userId, status: 'pending' },
+      include: { listing: true, lender: true, borrower: true },
+      orderBy: { created_at: 'desc' }
+    });
+    res.json(loans);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch outgoing requests.' });
+  }
+};
+exports.getCurrentLoans = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const loans = await prisma.loan.findMany({
+      where: {
+        OR: [
+          { lender_id: userId },
+          { borrower_id: userId }
+        ],
+        status: 'on loan'
+      },
+      include: { listing: true, lender: true, borrower: true },
+      orderBy: { created_at: 'desc' }
+    });
+    res.json(loans);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch current loans.' });
+  }
+};
+exports.getLoanHistory = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const loans = await prisma.loan.findMany({
+      where: {
+        OR: [
+          { lender_id: userId },
+          { borrower_id: userId }
+        ],
+        status: { in: ['returned', 'refused', 'cancelled', 'overdue'] }
+      },
+      include: { listing: true, lender: true, borrower: true },
+      orderBy: { created_at: 'desc' }
+    });
+    res.json(loans);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch loan history.' });
   }
 }; 
