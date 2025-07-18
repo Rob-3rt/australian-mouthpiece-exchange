@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import axios from '../api/axios';
 
 const LoanManagement = () => {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [loans, setLoans] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
