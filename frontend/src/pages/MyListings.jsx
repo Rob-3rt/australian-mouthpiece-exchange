@@ -402,7 +402,7 @@ export default function MyListings() {
                         </IconButton>
                       )}
                       {status === 'active' && (
-                        <IconButton size="small" onClick={() => handleMarkAsSold(listing)} title="Mark as Sold" sx={{ borderRadius: '8px', color: '#ff385c' }}>
+                        <IconButton size="small" onClick={() => handleMarkAsSold(listing)} title="Mark as Sold" sx={{ borderRadius: '8px', color: '#43a047' }}>
                           <CheckCircleIcon />
                         </IconButton>
                       )}
