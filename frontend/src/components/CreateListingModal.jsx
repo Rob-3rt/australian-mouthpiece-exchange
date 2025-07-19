@@ -130,16 +130,17 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
         }));
         photos = resizedPhotos;
       }
+      // Ensure correct types for all fields
       const payload = {
         instrument_type: data.instrument_type,
         brand: data.brand,
         model: data.model,
         condition: data.condition,
-        price: data.price,
+        price: parseFloat(data.price),
         description: data.description,
         photos,
-        open_to_swap: data.open_to_swap,
-        open_to_loan: data.open_to_loan
+        open_to_swap: data.open_to_swap === 'true' || data.open_to_swap === true,
+        open_to_loan: data.open_to_loan === 'true' || data.open_to_loan === true
       };
       let res;
       if (isEdit && listing && listing.listing_id) {
@@ -569,7 +570,7 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
             }
           }}
         >
-          Create
+          {isSubmitting ? <CircularProgress size={22} /> : (isEdit ? 'Update' : 'Create')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -229,7 +229,38 @@ exports.getListing = async (req, res) => {
 // Update a listing
 exports.updateListing = async (req, res) => {
   try {
+    console.log('DEBUG: PUT /api/listings/:id hit');
+    console.log('DEBUG: Incoming body (excluding photos):', {
+      ...req.body,
+      photos: req.body.photos ? `[${Array.isArray(req.body.photos) ? req.body.photos.length : 'not array'}]` : undefined
+    });
     const { instrument_type, brand, model, condition, price, description, photos, open_to_swap, open_to_loan, status, paypal_link_override } = req.body;
+    // Validate required fields
+    const missingFields = [];
+    if (!instrument_type) missingFields.push('instrument_type');
+    if (!brand) missingFields.push('brand');
+    if (!model) missingFields.push('model');
+    if (!condition) missingFields.push('condition');
+    if (!price) missingFields.push('price');
+    if (!description) missingFields.push('description');
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields);
+      return res.status(400).json({ error: 'Missing required fields.', missingFields });
+    }
+    // Fix boolean conversion for open_to_swap
+    let openToSwapBool = false;
+    if (typeof open_to_swap === 'string') {
+      openToSwapBool = open_to_swap.toLowerCase() === 'true';
+    } else {
+      openToSwapBool = !!open_to_swap;
+    }
+    // Fix boolean conversion for open_to_loan
+    let openToLoanBool = false;
+    if (typeof open_to_loan === 'string') {
+      openToLoanBool = open_to_loan.toLowerCase() === 'true';
+    } else {
+      openToLoanBool = !!open_to_loan;
+    }
     const listing = await prisma.listing.findUnique({ where: { listing_id: Number(req.params.id) } });
     if (!listing) return res.status(404).json({ error: 'Listing not found.' });
     if (listing.user_id !== req.user.userId) return res.status(403).json({ error: 'Not authorized.' });
@@ -253,15 +284,31 @@ exports.updateListing = async (req, res) => {
         return res.status(400).json({ error: 'PayPal link must be a valid PayPal.Me URL or email address.' });
       }
     }
-    const updated = await prisma.listing.update({
-      where: { listing_id: listing.listing_id },
-      data: {
-        instrument_type, brand, model, condition, price: price ? parseFloat(price) : undefined, description, photos, open_to_swap, open_to_loan, status, paypal_link_override: validatedPaypal
-      },
-    });
-    res.json(updated);
+    try {
+      const updated = await prisma.listing.update({
+        where: { listing_id: listing.listing_id },
+        data: {
+          instrument_type,
+          brand,
+          model,
+          condition,
+          price: price ? parseFloat(price) : undefined,
+          description,
+          photos: photos || [],
+          open_to_swap: openToSwapBool,
+          open_to_loan: openToLoanBool,
+          status,
+          paypal_link_override: validatedPaypal
+        },
+      });
+      res.json(updated);
+    } catch (err) {
+      console.error('Error in updateListing:', err);
+      res.status(500).json({ error: 'Failed to update listing.', details: err.message });
+    }
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update listing.' });
+    console.error('Error in updateListing (outer):', err);
+    res.status(500).json({ error: 'Failed to update listing.', details: err.message });
   }
 };
 
