@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Box, Container, CircularProgress, Grid } from '@mui/material';
+import { Typography, Box, Container, CircularProgress, Grid, Tabs, Tab, Box as MuiBox } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import axios from '../api/axios';
 import LoanCard from '../components/LoanCard';
@@ -12,6 +12,7 @@ export default function Loans() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [tab, setTab] = useState('incoming');
 
   useEffect(() => {
     fetchLoans();
@@ -95,128 +96,142 @@ export default function Loans() {
           </Box>
         ) : (
           <>
-            <Box mb={6}>
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
-                Incoming Requests
-              </Typography>
-              {incoming.length === 0 ? (
-                <Typography color="text.secondary">No incoming loan requests.</Typography>
-              ) : (
-                <Grid container spacing={3}>
-                  {incoming.map(loan => (
-                    <Grid item xs={12} md={6} key={loan.loan_id}>
-                      <LoanCard
-                        loan={loan}
-                        user={user}
-                        onApprove={handleApprove}
-                        onRefuse={handleRefuse}
-                        onReturn={handleReturn}
-                        onCancel={handleCancel}
-                        onSold={handleSold}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Box>
-            <Box mb={6}>
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
-                Outgoing Requests
-              </Typography>
-              {outgoing.length === 0 ? (
-                <Typography color="text.secondary">No outgoing loan requests.</Typography>
-              ) : (
-                <Grid container spacing={3}>
-                  {outgoing.map(loan => (
-                    <Grid item xs={12} md={6} key={loan.loan_id}>
-                      <LoanCard
-                        loan={loan}
-                        user={user}
-                        onApprove={handleApprove}
-                        onRefuse={handleRefuse}
-                        onReturn={handleReturn}
-                        onCancel={handleCancel}
-                        onSold={handleSold}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Box>
-            <Box mb={6}>
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
-                Items I'm Borrowing
-              </Typography>
-              {loansBorrowing.length === 0 ? (
-                <Typography color="text.secondary">No items you are borrowing.</Typography>
-              ) : (
-                <Grid container spacing={3}>
-                  {loansBorrowing.map(loan => (
-                    <Grid item xs={12} md={6} key={loan.loan_id}>
-                      <LoanCard
-                        loan={loan}
-                        user={user}
-                        onApprove={handleApprove}
-                        onRefuse={handleRefuse}
-                        onReturn={handleReturn}
-                        onCancel={handleCancel}
-                        onSold={handleSold}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Box>
-            <Box mb={6}>
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
-                Items I've Lent Out
-              </Typography>
-              {loansLending.length === 0 ? (
-                <Typography color="text.secondary">No items you are lending out.</Typography>
-              ) : (
-                <Grid container spacing={3}>
-                  {loansLending.map(loan => (
-                    <Grid item xs={12} md={6} key={loan.loan_id}>
-                      <LoanCard
-                        loan={loan}
-                        user={user}
-                        onApprove={handleApprove}
-                        onRefuse={handleRefuse}
-                        onReturn={handleReturn}
-                        onCancel={handleCancel}
-                        onSold={handleSold}
-                        onRequestReturn={handleRequestReturn}
-                        onConfirmReturn={handleConfirmReturn}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Box>
-            <Box mb={6}>
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#4a1d3f' }}>
-                Loan History
-              </Typography>
-              {history.length === 0 ? (
-                <Typography color="text.secondary">No loan history.</Typography>
-              ) : (
-                <Grid container spacing={3}>
-                  {history.map(loan => (
-                    <Grid item xs={12} md={6} key={loan.loan_id}>
-                      <LoanCard
-                        loan={loan}
-                        user={user}
-                        onApprove={handleApprove}
-                        onRefuse={handleRefuse}
-                        onReturn={handleReturn}
-                        onCancel={handleCancel}
-                        onSold={handleSold}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Box>
+            <MuiBox sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+              <Tabs
+                value={tab}
+                onChange={(_, newValue) => setTab(newValue)}
+                textColor="primary"
+                indicatorColor="primary"
+                aria-label="loan tabs"
+                variant="scrollable"
+                scrollButtons="auto"
+              >
+                <Tab label={`Incoming Requests (${incoming.length})`} value="incoming" />
+                <Tab label={`Outgoing Requests (${outgoing.length})`} value="outgoing" />
+                <Tab label={`Borrowing (${loansBorrowing.length})`} value="borrowing" />
+                <Tab label={`Lending (${loansLending.length})`} value="lending" />
+                <Tab label={`History (${history.length})`} value="history" />
+              </Tabs>
+            </MuiBox>
+            {tab === 'incoming' && (
+              <Box mb={6}>
+                {incoming.length === 0 ? (
+                  <Typography color="text.secondary">No incoming loan requests.</Typography>
+                ) : (
+                  <Grid container spacing={3}>
+                    {incoming.map(loan => (
+                      <Grid item xs={12} md={6} key={loan.loan_id}>
+                        <LoanCard
+                          loan={loan}
+                          user={user}
+                          onApprove={handleApprove}
+                          onRefuse={handleRefuse}
+                          onReturn={handleReturn}
+                          onCancel={handleCancel}
+                          onSold={handleSold}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Box>
+            )}
+            {tab === 'outgoing' && (
+              <Box mb={6}>
+                {outgoing.length === 0 ? (
+                  <Typography color="text.secondary">No outgoing loan requests.</Typography>
+                ) : (
+                  <Grid container spacing={3}>
+                    {outgoing.map(loan => (
+                      <Grid item xs={12} md={6} key={loan.loan_id}>
+                        <LoanCard
+                          loan={loan}
+                          user={user}
+                          onApprove={handleApprove}
+                          onRefuse={handleRefuse}
+                          onReturn={handleReturn}
+                          onCancel={handleCancel}
+                          onSold={handleSold}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Box>
+            )}
+            {tab === 'borrowing' && (
+              <Box mb={6}>
+                {loansBorrowing.length === 0 ? (
+                  <Typography color="text.secondary">No items you are borrowing.</Typography>
+                ) : (
+                  <Grid container spacing={3}>
+                    {loansBorrowing.map(loan => (
+                      <Grid item xs={12} md={6} key={loan.loan_id}>
+                        <LoanCard
+                          loan={loan}
+                          user={user}
+                          onApprove={handleApprove}
+                          onRefuse={handleRefuse}
+                          onReturn={handleReturn}
+                          onCancel={handleCancel}
+                          onSold={handleSold}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Box>
+            )}
+            {tab === 'lending' && (
+              <Box mb={6}>
+                {loansLending.length === 0 ? (
+                  <Typography color="text.secondary">No items you are lending out.</Typography>
+                ) : (
+                  <Grid container spacing={3}>
+                    {loansLending.map(loan => (
+                      <Grid item xs={12} md={6} key={loan.loan_id}>
+                        <LoanCard
+                          loan={loan}
+                          user={user}
+                          onApprove={handleApprove}
+                          onRefuse={handleRefuse}
+                          onReturn={handleReturn}
+                          onCancel={handleCancel}
+                          onSold={handleSold}
+                          onRequestReturn={handleRequestReturn}
+                          onConfirmReturn={handleConfirmReturn}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Box>
+            )}
+            {tab === 'history' && (
+              <Box mb={6}>
+                {history.length === 0 ? (
+                  <Typography color="text.secondary">No loan history.</Typography>
+                ) : (
+                  <Grid container spacing={3}>
+                    {history.map(loan => (
+                      <Grid item xs={12} md={6} key={loan.loan_id}>
+                        <LoanCard
+                          loan={loan}
+                          user={user}
+                          onApprove={handleApprove}
+                          onRefuse={handleRefuse}
+                          onReturn={handleReturn}
+                          onCancel={handleCancel}
+                          onSold={handleSold}
+                          onRequestReturn={handleRequestReturn}
+                          onConfirmReturn={handleConfirmReturn}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Box>
+            )}
           </>
         )}
       </Container>
