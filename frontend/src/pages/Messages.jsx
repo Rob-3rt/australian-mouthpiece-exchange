@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Box, Grid, Card, CardContent, CircularProgress, Container } from '@mui/material';
+import { Typography, Box, Grid, Card, CardContent, CircularProgress, Container, Badge } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -133,6 +133,8 @@ export default function Messages() {
                     transition: 'all 0.2s ease-in-out',
                     cursor: 'pointer',
                     width: '100%',
+                    background: conv.unreadCount > 0 ? 'linear-gradient(90deg, #fff7f7 80%, #ffeaea 100%)' : '#fff',
+                    boxShadow: conv.unreadCount > 0 ? '0 0 0 2px #ff385c33' : undefined,
                     '&:hover': {
                       transform: 'translateY(-2px)',
                       boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
@@ -163,19 +165,26 @@ export default function Messages() {
                         </Box>
                       )}
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography
-                          variant="subtitle1"
-                          sx={{
-                            fontWeight: 600,
-                            color: '#222222',
-                            mb: 0.5,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          {conv.other_user ? (conv.other_user.nickname || conv.other_user.name) : 'Unknown User'}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {conv.unreadCount > 0 && (
+                            <Badge color="error" badgeContent={conv.unreadCount} sx={{ mr: 1 }}>
+                              <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 4, background: '#ff385c' }} />
+                            </Badge>
+                          )}
+                          <Typography
+                            variant="subtitle1"
+                            sx={{
+                              fontWeight: 600,
+                              color: '#222222',
+                              mb: 0.5,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {conv.other_user ? (conv.other_user.nickname || conv.other_user.name) : 'Unknown User'}
+                          </Typography>
+                        </Box>
                         {conv.listing_brand && conv.listing_model && (
                           <Typography
                             variant="body2"
