@@ -32,6 +32,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useForm } from 'react-hook-form';
 import api from '../api/axios.js';
 import { useAuth } from '../contexts/AuthContext';
+import CreateListingModal from '../components/CreateListingModal';
 
 const INSTRUMENT_TYPES = [
   'Trumpet',
@@ -488,6 +489,13 @@ export default function MyListings() {
       </Container>
 
       {/* Removed Add Listing modal and button; use nav bar button instead */}
+
+      <CreateListingModal
+        open={modalOpen}
+        onClose={handleCloseModal}
+        listing={editingListing}
+        onSuccess={fetchMyListings}
+      />
 
       <Snackbar
         open={snackbar.open}
