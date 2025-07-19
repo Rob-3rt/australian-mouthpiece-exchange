@@ -87,7 +87,7 @@ export default function Home() {
           borderColor: '#222222'
         },
         width: '100%',
-        height: viewMode === 'grid' ? 480 : 120,
+        height: viewMode === 'grid' ? 520 : 120,
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: viewMode === 'grid' ? 'column' : 'row',
