@@ -336,37 +336,58 @@ router.post('/users/:id/resend-verification', async (req, res) => {
     const token = jwt.sign({ userId: user.user_id }, config.jwtSecret, { expiresIn: '1d' });
     const verifyUrl = `${config.frontendUrl}/verify-email?token=${token}`;
     
-    // Send verification email
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransporter({
-      host: config.smtpHost,
-      port: config.smtpPort,
-      auth: { user: config.smtpUser, pass: config.smtpPass },
-    });
-    
-    await transporter.sendMail({
-      from: config.emailFrom,
-      to: user.email,
-      subject: 'Verify your email - The Australian Mouthpiece Exchange',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #4a1d3f;">Email Verification</h2>
-          <p>Hi ${user.name},</p>
-          <p>An administrator has requested to resend your email verification link.</p>
-          <p>Please verify your email by clicking the link below:</p>
-          <a href="${verifyUrl}" 
-             style="background-color: #4a1d3f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
-            Verify Email
-          </a>
-          <p style="margin-top: 30px; color: #666; font-size: 14px;">
-            This link will expire in 24 hours.
-          </p>
-          <p style="color: #666; font-size: 14px;">
-            If you didn't request this verification, please ignore this email.
-          </p>
-        </div>
-      `,
-    });
+    // Send verification email using Resend
+    let resend = null;
+    try {
+      resend = require('resend');
+      if (config.resendApiKey) {
+        resend = new resend.Resend(config.resendApiKey);
+      }
+    } catch (error) {
+      console.log('Resend not installed, using nodemailer');
+    }
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #4a1d3f;">Email Verification</h2>
+        <p>Hi ${user.name},</p>
+        <p>An administrator has requested to resend your email verification link.</p>
+        <p>Please verify your email by clicking the link below:</p>
+        <a href="${verifyUrl}" 
+           style="background-color: #4a1d3f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
+          Verify Email
+        </a>
+        <p style="margin-top: 30px; color: #666; font-size: 14px;">
+          This link will expire in 24 hours.
+        </p>
+        <p style="color: #666; font-size: 14px;">
+          If you didn't request this verification, please ignore this email.
+        </p>
+      </div>
+    `;
+
+    if (resend && config.resendApiKey) {
+      await resend.emails.send({
+        from: config.emailFrom,
+        to: user.email,
+        subject: 'Verify your email - The Australian Mouthpiece Exchange',
+        html: html,
+      });
+    } else {
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransport({
+        host: config.smtpHost,
+        port: config.smtpPort,
+        auth: { user: config.smtpUser, pass: config.smtpPass },
+      });
+      
+      await transporter.sendMail({
+        from: config.emailFrom,
+        to: user.email,
+        subject: 'Verify your email - The Australian Mouthpiece Exchange',
+        html: html,
+      });
+    }
     
     console.log(`Verification email resent successfully to: ${user.email}`);
     res.json({ 
