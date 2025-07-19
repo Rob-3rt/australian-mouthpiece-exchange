@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Box, TextField, Button, Alert, CircularProgress, Rating, MenuItem, Grid, Card, CardContent, CardMedia, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Container, Snackbar, Autocomplete } from '@mui/material';
+import { Typography, Box, TextField, Button, Alert, CircularProgress, Rating, MenuItem, Grid, Card, CardContent, CardMedia, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Container, Snackbar, Autocomplete, Switch, FormControlLabel } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -233,6 +233,7 @@ export default function Profile() {
               <Typography>State: {profile.location_state}</Typography>
               <Typography>Postcode: {profile.location_postcode}</Typography>
               <Typography>PayPal: {profile.paypal_link || '-'} </Typography>
+              <Typography>Email Notifications: {profile.email_notifications !== false ? 'On' : 'Off'}</Typography>
               <Box mt={2}>
                 <Typography>Average Rating:</Typography>
                 <Rating value={profile.average_rating || 0} precision={0.1} readOnly sx={{ color: '#ffd700' }} />
@@ -292,6 +293,18 @@ export default function Profile() {
                   </DialogActions>
                 </Dialog>
               </Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    color="primary"
+                    defaultChecked={profile.email_notifications !== false}
+                    {...registerProfile('email_notifications')}
+                    checked={undefined} // Let react-hook-form control checked state
+                  />
+                }
+                label="Email me when I get a new message"
+                sx={{ mt: 2 }}
+              />
               <Button type="submit" variant="contained" sx={{ mt: 2, background: 'linear-gradient(90deg, #4a1d3f 60%, #7c3a7e 100%)', color: 'white', borderRadius: '8px', fontWeight: 600, textTransform: 'none', boxShadow: '0 2px 8px rgba(74,29,63,0.08)' }}>Save</Button>
               <Button variant="text" sx={{ mt: 2, ml: 2, color: '#4a1d3f', fontWeight: 600, textTransform: 'none' }} onClick={() => { setEditMode(false); resetProfile(profile); }}>Cancel</Button>
             </form>
