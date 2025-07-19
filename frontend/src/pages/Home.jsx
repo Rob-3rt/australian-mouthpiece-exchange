@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Typography, Container, Box, Grid, Card, CardContent, Button, Rating, CircularProgress, Pagination } from '@mui/material';
+import { Typography, Container, Box, Grid, Card, CardContent, Button, Rating, CircularProgress, Pagination, IconButton, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import ViewListIcon from '@mui/icons-material/ViewList';
 import { getListings } from '../api/listings';
 import { useNavigate } from 'react-router-dom';
 import FilterBar from '../components/FilterBar';
@@ -14,6 +16,7 @@ export default function Home() {
   const [filters, setFilters] = useState({});
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, totalCount: 0 });
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const debounceTimeout = useRef();
   const navigate = useNavigate();
 
@@ -63,6 +66,196 @@ export default function Home() {
   const handlePageChange = (event, newPage) => {
     setPagination(prev => ({ ...prev, page: newPage }));
   };
+
+  const handleViewModeChange = (event, newViewMode) => {
+    if (newViewMode !== null) {
+      setViewMode(newViewMode);
+    }
+  };
+
+  const ListingCard = ({ listing }) => (
+    <Card
+      sx={{
+        cursor: 'pointer',
+        border: '1px solid #dddddd',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': { 
+          transform: 'translateY(-2px)', 
+          boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
+          borderColor: '#222222'
+        },
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        height: viewMode === 'grid' ? 'auto' : 'auto'
+      }}
+      onClick={() => navigate(`/listings/${listing.listing_id}`)}
+    >
+      {/* Image container */}
+      <Box sx={{ 
+        position: 'relative',
+        width: viewMode === 'grid' ? '100%' : '200px',
+        height: viewMode === 'grid' ? 280 : 150,
+        backgroundColor: '#f7f7f7',
+        overflow: 'hidden',
+        flexShrink: 0
+      }}>
+        {listing.photos && listing.photos.length > 0 ? (
+          <img
+            src={listing.photos[0]}
+            alt={listing.brand + ' ' + listing.model}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+        ) : (
+          <Box sx={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#717171',
+            fontSize: '14px'
+          }}>
+            No Image
+          </Box>
+        )}
+      </Box>
+      
+      {/* Content */}
+      <Box sx={{ 
+        p: 3, 
+        flexGrow: 1, 
+        display: 'flex', 
+        flexDirection: viewMode === 'grid' ? 'column' : 'row',
+        alignItems: viewMode === 'list' ? 'center' : 'stretch',
+        gap: viewMode === 'list' ? 3 : 0
+      }}>
+        <Box sx={{ flex: 1 }}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontWeight: 600, 
+              fontSize: '16px',
+              color: '#222222',
+              mb: 1,
+              lineHeight: 1.2
+            }}
+          >
+            {listing.brand} {listing.model} {listing.size && `(${listing.size})`}
+          </Typography>
+          
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: '#717171',
+              fontSize: '14px',
+              mb: 1
+            }}
+          >
+            {listing.instrument_type} • {listing.condition}
+          </Typography>
+          
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontWeight: 700,
+              fontSize: '18px',
+              color: '#222222',
+              mb: 1
+            }}
+          >
+            ${listing.price}
+          </Typography>
+          
+          {viewMode === 'grid' && (
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#717171',
+                fontSize: '14px',
+                mb: 2,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                lineHeight: 1.4
+              }}
+            >
+              {listing.description}
+            </Typography>
+          )}
+          
+          {viewMode === 'list' && (
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#717171',
+                fontSize: '14px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: '-webkit-box',
+                WebkitLineClamp: 1,
+                WebkitBoxOrient: 'vertical',
+                lineHeight: 1.4,
+                maxWidth: '300px'
+              }}
+            >
+              {listing.description}
+            </Typography>
+          )}
+        </Box>
+        
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          pt: viewMode === 'grid' ? 1 : 0,
+          borderTop: viewMode === 'grid' ? '1px solid #f0f0f0' : 'none',
+          marginTop: viewMode === 'grid' ? 'auto' : 0,
+          flexDirection: viewMode === 'list' ? 'column' : 'row',
+          gap: viewMode === 'list' ? 1 : 0,
+          alignItems: viewMode === 'list' ? 'flex-end' : 'center'
+        }}>
+          <Box sx={{ textAlign: viewMode === 'list' ? 'right' : 'left' }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                fontWeight: 500,
+                fontSize: '14px',
+                color: '#222222'
+              }}
+            >
+              {listing.user.nickname || listing.user.name}
+            </Typography>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: '#717171',
+                fontSize: '12px'
+              }}
+            >
+              {listing.user.location_state}
+            </Typography>
+          </Box>
+          <Rating 
+            value={listing.user.average_rating || 0} 
+            precision={0.1} 
+            readOnly 
+            size="small"
+            sx={{ '& .MuiRating-iconFilled': { color: '#ff385c' } }}
+          />
+        </Box>
+      </Box>
+    </Card>
+  );
 
   return (
     <Box sx={{ backgroundColor: '#ffffff' }}>
@@ -137,180 +330,83 @@ export default function Home() {
           </Box>
         ) : (
           <>
-            {/* Latest Listings Title */}
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                fontWeight: 450, 
-                color: '#222222', 
-                mb: 3,
-                textAlign: 'left',
-                letterSpacing: -0.5
-              }}
-            >
-              Latest Listings
-            </Typography>
-            
+            {/* Latest Listings Title and View Toggle */}
             <Box sx={{ 
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1,
-              justifyContent: 'flex-start'
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              mb: 3
             }}>
-              {listings.map(listing => (
-              <Box key={listing.listing_id} sx={{ 
-                flex: { xs: '0 0 100%', sm: '0 0 calc(50% - 4px)', md: '0 0 calc(25% - 6px)' },
-                display: 'flex'
-              }}>
-                <Card
-                  sx={{
-                    cursor: 'pointer',
+              <Typography 
+                variant="h4" 
+                sx={{ 
+                  fontWeight: 450, 
+                  color: '#222222',
+                  letterSpacing: -0.5
+                }}
+              >
+                Latest Listings
+              </Typography>
+              
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={handleViewModeChange}
+                aria-label="view mode"
+                size="small"
+                sx={{
+                  '& .MuiToggleButton-root': {
                     border: '1px solid #dddddd',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': { 
-                      transform: 'translateY(-2px)', 
-                      boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
-                      borderColor: '#222222'
+                    color: '#717171',
+                    '&.Mui-selected': {
+                      backgroundColor: '#4a1d3f',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#3a162f'
+                      }
                     },
-                    display: 'flex',
-                    flexDirection: 'column',
-                    width: '100%'
-                  }}
-                  onClick={() => navigate(`/listings/${listing.listing_id}`)}
-                >
-                  {/* Image container */}
-                  <Box sx={{ 
-                    position: 'relative',
-                    width: '100%',
-                    height: 280,
-                    backgroundColor: '#f7f7f7',
-                    overflow: 'hidden'
+                    '&:hover': {
+                      backgroundColor: '#f7f7f7'
+                    }
+                  }
+                }}
+              >
+                <ToggleButton value="grid" aria-label="grid view">
+                  <ViewModuleIcon />
+                </ToggleButton>
+                <ToggleButton value="list" aria-label="list view">
+                  <ViewListIcon />
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+            
+            {viewMode === 'grid' ? (
+              <Box sx={{ 
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 1,
+                justifyContent: 'flex-start'
+              }}>
+                {listings.map(listing => (
+                  <Box key={listing.listing_id} sx={{ 
+                    flex: { xs: '0 0 100%', sm: '0 0 calc(50% - 4px)', md: '0 0 calc(25% - 6px)' },
+                    display: 'flex'
                   }}>
-                    {listing.photos && listing.photos.length > 0 ? (
-                      <img
-                        src={listing.photos[0]}
-                        alt={listing.brand + ' ' + listing.model}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          display: 'block',
-                        }}
-                      />
-                    ) : (
-                      <Box sx={{
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#717171',
-                        fontSize: '14px'
-                      }}>
-                        No Image
-                      </Box>
-                    )}
+                    <ListingCard listing={listing} />
                   </Box>
-                  
-                  {/* Content */}
-                  <Box sx={{ p: 3, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 600, 
-                        fontSize: '16px',
-                        color: '#222222',
-                        mb: 1,
-                        lineHeight: 1.2
-                      }}
-                    >
-                      {listing.brand} {listing.model} {listing.size && `(${listing.size})`}
-                    </Typography>
-                    
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#717171',
-                        fontSize: '14px',
-                        mb: 1
-                      }}
-                    >
-                      {listing.instrument_type} • {listing.condition}
-                    </Typography>
-                    
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 700,
-                        fontSize: '18px',
-                        color: '#222222',
-                        mb: 1
-                      }}
-                    >
-                      ${listing.price}
-                    </Typography>
-                    
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#717171',
-                        fontSize: '14px',
-                        mb: 2,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        lineHeight: 1.4
-                      }}
-                    >
-                      {listing.description}
-                    </Typography>
-                    
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between',
-                      pt: 1,
-                      borderTop: '1px solid #f0f0f0',
-                      marginTop: 'auto'
-                    }}>
-                      <Box>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontWeight: 500,
-                            fontSize: '14px',
-                            color: '#222222'
-                          }}
-                        >
-                          {listing.user.nickname || listing.user.name}
-                        </Typography>
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            color: '#717171',
-                            fontSize: '12px'
-                          }}
-                        >
-                          {listing.user.location_state}
-                        </Typography>
-                      </Box>
-                      <Rating 
-                        value={listing.user.average_rating || 0} 
-                        precision={0.1} 
-                        readOnly 
-                        size="small"
-                        sx={{ '& .MuiRating-iconFilled': { color: '#ff385c' } }}
-                      />
-                    </Box>
-                  </Box>
-                </Card>
+                ))}
               </Box>
-            ))}
-          </Box>
+            ) : (
+              <Box sx={{ 
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2
+              }}>
+                {listings.map(listing => (
+                  <ListingCard key={listing.listing_id} listing={listing} />
+                ))}
+              </Box>
+            )}
           
           {/* Pagination */}
           {pagination.totalPages > 1 && (
