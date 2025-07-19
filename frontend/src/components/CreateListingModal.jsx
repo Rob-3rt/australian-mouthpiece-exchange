@@ -17,7 +17,7 @@ const BRANDS = [
 ];
 const CONDITIONS = ['New', 'Like New', 'Excellent', 'Very Good', 'Good', 'Fair', 'Poor'];
 
-export default function CreateListingModal({ open, onClose, onSuccess }) {
+export default function CreateListingModal({ open, onClose, onSuccess, listing = null, isEdit = false }) {
   const { user } = useAuth();
   const { register, handleSubmit, reset, setValue } = useForm({
     defaultValues: {
@@ -41,6 +41,24 @@ export default function CreateListingModal({ open, onClose, onSuccess }) {
   useEffect(() => {
     if (user) setSellerPaypal(user.paypal_link || '');
   }, [user]);
+
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (listing && isEdit) {
+      setValue('instrument_type', listing.instrument_type);
+      setValue('brand', listing.brand);
+      setValue('model', listing.model);
+      setValue('condition', listing.condition);
+      setValue('price', listing.price);
+      setValue('description', listing.description);
+      setValue('open_to_swap', listing.open_to_swap ? 'true' : 'false');
+      setValue('open_to_loan', listing.open_to_loan ? 'true' : 'false');
+      setSelectedImages((listing.photos || []).map(url => ({ preview: url, file: null })));
+    } else if (!listing && !isEdit) {
+      reset();
+      setSelectedImages([]);
+    }
+  }, [listing, isEdit, reset, setValue]);
 
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
@@ -99,7 +117,6 @@ export default function CreateListingModal({ open, onClose, onSuccess }) {
     });
   }
   const handleListingFormSubmit = async (data) => {
-    console.log('DEBUG: Form submitted', data);
     setIsSubmitting(true);
     try {
       let photos = [];
@@ -124,16 +141,19 @@ export default function CreateListingModal({ open, onClose, onSuccess }) {
         open_to_swap: data.open_to_swap,
         open_to_loan: data.open_to_loan
       };
-      console.log('DEBUG: Payload to be sent', payload);
-      const res = await api.post('/api/listings', payload);
-      console.log('DEBUG: API response', res);
-      setSnackbar({ open: true, message: 'Listing created!', severity: 'success' });
+      let res;
+      if (isEdit && listing && listing.listing_id) {
+        res = await api.put(`/api/listings/${listing.listing_id}`, payload);
+        setSnackbar({ open: true, message: 'Listing updated!', severity: 'success' });
+      } else {
+        res = await api.post('/api/listings', payload);
+        setSnackbar({ open: true, message: 'Listing created!', severity: 'success' });
+      }
       if (onSuccess && res.data && res.data.listing_id) onSuccess(res.data.listing_id);
       reset();
       setSelectedImages([]);
       onClose();
     } catch (err) {
-      console.error('DEBUG: Error during listing creation', err);
       const errorMessage = err.response?.data?.error || 'Failed to save listing. Please check your image sizes (max 5MB each).';
       setSnackbar({ open: true, message: errorMessage, severity: 'error' });
     } finally {
@@ -159,7 +179,7 @@ export default function CreateListingModal({ open, onClose, onSuccess }) {
         borderBottom: '1px solid #f0f0f0',
         pb: 2
       }}>
-        Create A New Mouthpiece Listing
+        {isEdit ? 'Edit Listing' : 'Create A New Mouthpiece Listing'}
       </DialogTitle>
       <DialogContent sx={{ position: 'relative' }}>
         {isSubmitting && (

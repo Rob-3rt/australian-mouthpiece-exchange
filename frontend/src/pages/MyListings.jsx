@@ -494,6 +494,7 @@ export default function MyListings() {
         open={modalOpen}
         onClose={handleCloseModal}
         listing={editingListing}
+        isEdit={Boolean(editingListing)}
         onSuccess={fetchMyListings}
       />
 
