@@ -136,6 +136,7 @@ exports.createListing = async (req, res) => {
   try {
     // Debug log incoming data (exclude photos/images)
     const { instrument_type, brand, model, condition, price, description, open_to_swap, open_to_loan, paypal_link_override, photos } = req.body;
+    const missingFields = [];
     if (!instrument_type) missingFields.push('instrument_type');
     if (!brand) missingFields.push('brand');
     if (!model) missingFields.push('model');
