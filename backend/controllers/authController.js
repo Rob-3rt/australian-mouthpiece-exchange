@@ -10,17 +10,56 @@ const prisma = new PrismaClient();
 async function sendVerificationEmail(user, req) {
   const token = jwt.sign({ userId: user.user_id }, config.jwtSecret, { expiresIn: '1d' });
   const verifyUrl = `${config.frontendUrl}/verify-email?token=${token}`;
-  const transporter = nodemailer.createTransport({
-    host: config.smtpHost,
-    port: config.smtpPort,
-    auth: { user: config.smtpUser, pass: config.smtpPass },
-  });
-  await transporter.sendMail({
-    from: config.emailFrom,
-    to: user.email,
-    subject: 'Verify your email',
-    html: `<p>Hi ${user.name},</p><p>Please verify your email by clicking <a href="${verifyUrl}">here</a>.</p>`,
-  });
+  
+  // Try to use Resend if available, fallback to nodemailer
+  let resend = null;
+  try {
+    resend = require('resend');
+    if (config.resendApiKey) {
+      resend = new resend.Resend(config.resendApiKey);
+    }
+  } catch (error) {
+    console.log('Resend not installed, using nodemailer');
+  }
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #4a1d3f;">Email Verification</h2>
+      <p>Hi ${user.name},</p>
+      <p>Welcome to The Australian Mouthpiece Exchange! Please verify your email by clicking the link below:</p>
+      <a href="${verifyUrl}" 
+         style="background-color: #4a1d3f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
+        Verify Email
+      </a>
+      <p style="margin-top: 30px; color: #666; font-size: 14px;">
+        This link will expire in 24 hours.
+      </p>
+      <p style="color: #666; font-size: 14px;">
+        If you didn't create an account, please ignore this email.
+      </p>
+    </div>
+  `;
+
+  if (resend && config.resendApiKey) {
+    await resend.emails.send({
+      from: config.emailFrom,
+      to: user.email,
+      subject: 'Verify your email - The Australian Mouthpiece Exchange',
+      html: html,
+    });
+  } else {
+    const transporter = nodemailer.createTransport({
+      host: config.smtpHost,
+      port: config.smtpPort,
+      auth: { user: config.smtpUser, pass: config.smtpPass },
+    });
+    await transporter.sendMail({
+      from: config.emailFrom,
+      to: user.email,
+      subject: 'Verify your email - The Australian Mouthpiece Exchange',
+      html: html,
+    });
+  }
 }
 
 // Register a new user
@@ -145,26 +184,61 @@ exports.verifyEmail = async (req, res) => {
 
 // Helper: send password reset email
 async function sendPasswordResetEmail(user, resetToken, req) {
-  const resetUrl = `${req.protocol}://${req.get('host').replace('4000', '5173')}/reset-password?token=${resetToken}`;
-  const transporter = nodemailer.createTransport({
-    host: config.smtpHost,
-    port: config.smtpPort,
-    auth: { user: config.smtpUser, pass: config.smtpPass },
-  });
-  await transporter.sendMail({
-    from: config.emailFrom,
-    to: user.email,
-    subject: 'Password Reset Request',
-    html: `
+  const resetUrl = `${config.frontendUrl}/reset-password?token=${resetToken}`;
+  
+  // Try to use Resend if available, fallback to nodemailer
+  let resend = null;
+  try {
+    resend = require('resend');
+    if (config.resendApiKey) {
+      resend = new resend.Resend(config.resendApiKey);
+    }
+  } catch (error) {
+    console.log('Resend not installed, using nodemailer');
+  }
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #4a1d3f;">Password Reset Request</h2>
       <p>Hi ${user.name},</p>
       <p>You requested a password reset for your The Australian Mouthpiece Exchange account.</p>
       <p>Click the link below to reset your password:</p>
-      <p><a href="${resetUrl}">Reset Password</a></p>
-      <p>This link will expire in 1 hour.</p>
-      <p>If you didn't request this reset, please ignore this email.</p>
-      <p>Thanks,<br>The Australian Mouthpiece Exchange Team</p>
-    `,
-  });
+      <a href="${resetUrl}" 
+         style="background-color: #4a1d3f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
+        Reset Password
+      </a>
+      <p style="margin-top: 30px; color: #666; font-size: 14px;">
+        This link will expire in 1 hour.
+      </p>
+      <p style="color: #666; font-size: 14px;">
+        If you didn't request this reset, please ignore this email.
+      </p>
+      <p style="color: #666; font-size: 14px;">
+        Thanks,<br>The Australian Mouthpiece Exchange Team
+      </p>
+    </div>
+  `;
+
+  if (resend && config.resendApiKey) {
+    await resend.emails.send({
+      from: config.emailFrom,
+      to: user.email,
+      subject: 'Password Reset Request - The Australian Mouthpiece Exchange',
+      html: html,
+    });
+  } else {
+    const transporter = nodemailer.createTransport({
+      host: config.smtpHost,
+      port: config.smtpPort,
+      auth: { user: config.smtpUser, pass: config.smtpPass },
+    });
+    await transporter.sendMail({
+      from: config.emailFrom,
+      to: user.email,
+      subject: 'Password Reset Request - The Australian Mouthpiece Exchange',
+      html: html,
+    });
+  }
 }
 
 // Request password reset
