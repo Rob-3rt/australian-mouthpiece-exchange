@@ -16,6 +16,10 @@ function isDisposableEmail(email) {
 // Get own profile
 exports.getMyProfile = async (req, res) => {
   try {
+    if (!req.user || !req.user.userId) {
+      console.error('No userId in req.user:', req.user);
+      return res.status(401).json({ error: 'Not authenticated.' });
+    }
     const user = await prisma.user.findUnique({
       where: { user_id: req.user.userId },
       select: {
@@ -23,8 +27,12 @@ exports.getMyProfile = async (req, res) => {
         email_notifications: true
       }
     });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
     res.json(user);
   } catch (err) {
+    console.error('getMyProfile error:', err);
     res.status(500).json({ error: 'Failed to fetch profile.' });
   }
 };
