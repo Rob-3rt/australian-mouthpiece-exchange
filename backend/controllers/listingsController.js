@@ -199,6 +199,7 @@ exports.createListing = async (req, res) => {
     });
     res.status(201).json(listing);
   } catch (err) {
+    console.error('Error in createListing:', err);
     res.status(500).json({ error: 'Failed to create listing.' });
   }
 };
