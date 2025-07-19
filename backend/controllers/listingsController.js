@@ -143,16 +143,20 @@ exports.getAllListings = async (req, res) => {
 // Create a new listing
 exports.createListing = async (req, res) => {
   try {
-    // Debug log incoming data
-    console.log('Incoming listing payload:', req.body);
-    const { instrument_type, brand, model, condition, price, description, photos, open_to_swap, open_to_loan, paypal_link_override } = req.body;
-    console.log('instrument_type:', instrument_type);
-    console.log('brand:', brand);
-    console.log('model:', model);
-    console.log('condition:', condition);
-    console.log('price:', price);
-    console.log('description:', description);
-    // Enhanced required fields check with detailed logging
+    // Debug log incoming data (exclude photos/images)
+    const { instrument_type, brand, model, condition, price, description, open_to_swap, open_to_loan, paypal_link_override, photos } = req.body;
+    console.log('Incoming listing payload:', {
+      instrument_type,
+      brand,
+      model,
+      condition,
+      price,
+      description,
+      open_to_swap,
+      open_to_loan,
+      paypal_link_override,
+      photos_count: Array.isArray(photos) ? photos.length : 0
+    });
     const missingFields = [];
     if (!instrument_type) missingFields.push('instrument_type');
     if (!brand) missingFields.push('brand');
