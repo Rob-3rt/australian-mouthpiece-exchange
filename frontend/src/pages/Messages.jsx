@@ -121,100 +121,107 @@ export default function Messages() {
           </Card>
         ) : (
           <Grid container spacing={2}>
-            {conversations.map(conv => (
-              <Grid item xs={12} key={conv.conversation_id + '_' + (conv.listing_id || 'none')}>
-                <Card 
-                  sx={{ 
-                    border: '1px solid #dddddd',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    transition: 'all 0.2s ease-in-out',
-                    cursor: 'pointer',
-                    '&:hover': { 
-                      transform: 'translateY(-2px)', 
-                      boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
-                      borderColor: '#222222'
-                    }
-                  }}
-                  onClick={() => handleConversationClick(conv.conversation_id, conv.listing_id)}
-                >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      {conv.listing_photo && (
-                        <Box sx={{ 
-                          width: 64, 
-                          height: 64, 
-                          borderRadius: '8px',
-                          overflow: 'hidden',
-                          flexShrink: 0
-                        }}>
-                          <img 
-                            src={conv.listing_photo} 
-                            alt="Listing thumbnail" 
-                            style={{ 
-                              width: '100%', 
-                              height: '100%', 
-                              objectFit: 'cover' 
-                            }} 
-                          />
-                        </Box>
-                      )}
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography 
-                          variant="subtitle1" 
-                          sx={{ 
-                            fontWeight: 600,
-                            color: '#222222',
-                            mb: 0.5,
+            {[...conversations]
+              .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+              .map(conv => (
+                <Grid item xs={12} key={conv.conversation_id + '_' + (conv.listing_id || 'none')}>
+                  <Card 
+                    sx={{ 
+                      border: '1px solid #dddddd',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      transition: 'all 0.2s ease-in-out',
+                      cursor: 'pointer',
+                      mb: 1.5,
+                      '&:hover': { 
+                        transform: 'translateY(-2px)', 
+                        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
+                        borderColor: '#222222'
+                      }
+                    }}
+                    onClick={() => handleConversationClick(conv.conversation_id, conv.listing_id)}
+                  >
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {conv.listing_photo && (
+                          <Box sx={{ 
+                            width: 64, 
+                            height: 64, 
+                            borderRadius: '8px',
                             overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          {conv.other_user ? (conv.other_user.nickname || conv.other_user.name) : 'Unknown User'}
-                        </Typography>
-                        {conv.listing_brand && conv.listing_model && (
+                            flexShrink: 0
+                          }}>
+                            <img 
+                              src={conv.listing_photo} 
+                              alt="Listing thumbnail" 
+                              style={{ 
+                                width: '100%', 
+                                height: '100%', 
+                                objectFit: 'cover' 
+                              }} 
+                            />
+                          </Box>
+                        )}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Typography 
-                            variant="body2" 
+                            variant="subtitle1" 
                             sx={{ 
-                              color: '#4a1d3f',
-                              fontWeight: 500,
+                              fontWeight: 600,
+                              color: '#222222',
                               mb: 0.5,
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap'
                             }}
                           >
-                            {conv.listing_brand} {conv.listing_model}
+                            {conv.other_user ? (conv.other_user.nickname || conv.other_user.name) : 'Unknown User'}
                           </Typography>
-                        )}
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            color: '#717171',
-                            mb: 0.5,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          {conv.last_message_preview}
-                        </Typography>
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            color: '#717171',
-                            fontSize: '12px'
-                          }}
-                        >
-                          {new Date(conv.updated_at).toLocaleString()}
-                        </Typography>
+                          {conv.listing_brand && conv.listing_model && (
+                            <Typography 
+                              variant="body2" 
+                              sx={{ 
+                                color: '#4a1d3f',
+                                fontWeight: 500,
+                                mb: 0.5,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              {conv.listing_brand} {conv.listing_model}
+                            </Typography>
+                          )}
+                          <Box sx={{
+                            background: '#f7f7f7',
+                            borderRadius: '8px',
+                            px: 2,
+                            py: 1,
+                            mb: 1,
+                            color: '#444',
+                            fontSize: '15px',
+                            fontWeight: 400,
+                            wordBreak: 'break-word',
+                            whiteSpace: 'pre-line',
+                            lineHeight: 1.5,
+                            border: '1px solid #ececec',
+                          }}>
+                            {conv.last_message_preview}
+                          </Box>
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              color: '#717171',
+                              fontSize: '12px'
+                            }}
+                          >
+                            {new Date(conv.updated_at).toLocaleString()}
+                          </Typography>
+                        </Box>
                       </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
           </Grid>
         )}
       </Container>
