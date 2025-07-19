@@ -103,7 +103,7 @@ export default function AdminDashboard() {
       console.log('Sending delete request to:', `/api/admin/users/${userId}`);
       const response = await api.delete(`/api/admin/users/${userId}`);
       // If backend returns a warning, show confirmation and force delete if confirmed
-      if (response.data && response.data.warning) {
+      if (response.data && (response.data.warning || (response.data.message && response.data.message.includes('active listings or loans')))) {
         // Show a second irreversible warning popup
         if (window.confirm('This user has active listings or loans. Are you sure you want to delete this user? This action cannot be undone.')) {
           // Admin confirmed, force delete
@@ -121,6 +121,19 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Delete user error:', error);
       let msg = 'Failed to delete user';
+      // If error response contains the warning message, show the second confirmation
+      if (error.response && error.response.data && (error.response.data.warning || (error.response.data.message && error.response.data.message.includes('active listings or loans')))) {
+        if (window.confirm('This user has active listings or loans. Are you sure you want to delete this user? This action cannot be undone.')) {
+          // Admin confirmed, force delete
+          const forceResponse = await api.delete(`/api/admin/users/${userId}?force=true`);
+          setSnackbar({ open: true, message: 'User deleted successfully', severity: 'success' });
+          fetchData();
+          return;
+        } else {
+          setSnackbar({ open: true, message: 'User deletion cancelled.', severity: 'info' });
+          return;
+        }
+      }
       if (error.response && error.response.data && error.response.data.message) {
         msg = error.response.data.message;
       }

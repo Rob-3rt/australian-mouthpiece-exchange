@@ -186,7 +186,7 @@ router.delete('/users/:id', async (req, res) => {
     const activeLoansCount = await prisma.loan.count({ where: { listing_id: { in: listingIds } } });
 
     if ((activeListingsCount > 0 || activeLoansCount > 0) && !force) {
-      return res.status(400).json({
+      return res.status(200).json({
         warning: true,
         message: 'Warning: this user has active listings or loans - do you want to proceed?',
         activeListings: activeListingsCount,
