@@ -16,7 +16,7 @@ export default function Home() {
   const [filters, setFilters] = useState({});
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, totalCount: 0 });
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
   const debounceTimeout = useRef();
   const navigate = useNavigate();
 
@@ -400,15 +400,13 @@ export default function Home() {
                 ))}
               </Box>
             ) : (
-              <Box sx={{ 
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 2
-              }}>
+              <Grid container spacing={3}>
                 {listings.map(listing => (
-                  <ListingCard key={listing.listing_id} listing={listing} />
+                  <Grid item xs={12} sm={6} key={listing.listing_id}>
+                    <ListingCard listing={listing} />
+                  </Grid>
                 ))}
-              </Box>
+              </Grid>
             )}
           
           {/* Pagination */}
