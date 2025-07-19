@@ -19,7 +19,7 @@ const CONDITIONS = ['New', 'Like New', 'Excellent', 'Very Good', 'Good', 'Fair',
 
 export default function CreateListingModal({ open, onClose, onSuccess, listing = null, isEdit = false }) {
   const { user } = useAuth();
-  const { register, handleSubmit, reset, setValue } = useForm({
+  const { register, handleSubmit, reset, setValue, control } = useForm({
     defaultValues: {
       instrument_type: '',
       brand: '',
@@ -160,11 +160,11 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
       setIsSubmitting(false);
     }
   };
-  const instrumentType = useWatch({ control: register, name: 'instrument_type' });
-  const brand = useWatch({ control: register, name: 'brand' });
-  const model = useWatch({ control: register, name: 'model' });
-  const openToSwap = useWatch({ control: register, name: 'open_to_swap' });
-  const openToLoan = useWatch({ control: register, name: 'open_to_loan' });
+  const instrumentType = useWatch({ control, name: 'instrument_type' });
+  const brand = useWatch({ control, name: 'brand' });
+  const model = useWatch({ control, name: 'model' });
+  const openToSwap = useWatch({ control, name: 'open_to_swap' });
+  const openToLoan = useWatch({ control, name: 'open_to_loan' });
 
   return (
     <Dialog 
@@ -273,7 +273,7 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
             select 
             fullWidth 
             margin="normal" 
-            value={useWatch({ control: register, name: 'condition' }) || ''}
+            value={useWatch({ control, name: 'condition' }) || ''}
             {...register('condition', { required: true })}
             onChange={e => setValue('condition', e.target.value)}
             sx={{
@@ -297,7 +297,7 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
             type="number" 
             fullWidth 
             margin="normal" 
-            value={useWatch({ control: register, name: 'price' }) || ''}
+            value={useWatch({ control, name: 'price' }) || ''}
             {...register('price', { required: true })}
             onChange={e => setValue('price', e.target.value)}
             sx={{
@@ -318,7 +318,7 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
             margin="normal" 
             multiline 
             rows={3} 
-            value={useWatch({ control: register, name: 'description' }) || ''}
+            value={useWatch({ control, name: 'description' }) || ''}
             {...register('description', { required: true })}
             onChange={e => setValue('description', e.target.value)}
             sx={{
