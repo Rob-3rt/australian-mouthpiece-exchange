@@ -67,9 +67,9 @@ exports.register = async (req, res) => {
   try {
     const { email, password, first_name, last_name, location_state, location_postcode, nickname } = req.body;
     
-    // Debug: log the received data
-    console.log('Registration request body:', req.body);
-    console.log('Extracted fields:', { email, password, first_name, last_name, location_state, location_postcode, nickname });
+    // Debug: log the received data (excluding password)
+    console.log('Registration request received for email:', email);
+    console.log('Extracted fields (safe):', { email, first_name, last_name, location_state, location_postcode, nickname });
     
     if (!email || !password || !first_name || !last_name || !location_state || !location_postcode) {
       console.log('Missing fields:', { 
