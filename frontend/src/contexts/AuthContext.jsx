@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [loading, setLoading] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(true); // NEW: loading user profile on mount
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -17,10 +18,12 @@ export function AuthProvider({ children }) {
     } else {
       localStorage.removeItem('token');
       setUser(null);
+      setLoadingUser(false); // No token, not loading user
     }
   }, [token]);
 
   const fetchCurrentUser = async () => {
+    setLoadingUser(true);
     try {
       const res = await api.get('/api/auth/me');
       setUser(res.data);
@@ -31,6 +34,8 @@ export function AuthProvider({ children }) {
         setToken(null);
         setUser(null);
       }
+    } finally {
+      setLoadingUser(false);
     }
   };
 
@@ -70,7 +75,7 @@ export function AuthProvider({ children }) {
   // Token is now handled by the axios interceptor in api/axios.js
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, error, login, register, logout, setError }}>
+    <AuthContext.Provider value={{ user, token, loading, loadingUser, error, login, register, logout, setError }}>
       {children}
     </AuthContext.Provider>
   );

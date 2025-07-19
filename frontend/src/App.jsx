@@ -29,12 +29,26 @@ import MailIcon from '@mui/icons-material/Mail';
 import api from './api/axios';
 
 function ProtectedRoute({ children }) {
-  const { user } = useAuth();
+  const { user, loadingUser } = useAuth();
+  if (loadingUser) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <span style={{ color: '#4a1d3f', fontWeight: 600, fontSize: 20 }}>Loading...</span>
+      </div>
+    );
+  }
   return user ? children : <Navigate to="/login" />;
 }
 
 function AdminRoute({ children }) {
-  const { user } = useAuth();
+  const { user, loadingUser } = useAuth();
+  if (loadingUser) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <span style={{ color: '#4a1d3f', fontWeight: 600, fontSize: 20 }}>Loading...</span>
+      </div>
+    );
+  }
   if (!user) {
     return <Navigate to="/login" />;
   }
