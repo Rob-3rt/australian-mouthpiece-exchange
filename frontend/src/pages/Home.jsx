@@ -73,7 +73,7 @@ export default function Home() {
     }
   };
 
-  const ListingCard = ({ listing }) => (
+  const ListingCard = ({ listing, viewMode }) => (
     <Card
       sx={{
         cursor: 'pointer',
@@ -86,10 +86,11 @@ export default function Home() {
           boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
           borderColor: '#222222'
         },
+        width: '100%',
+        height: viewMode === 'grid' ? 380 : 120,
+        boxSizing: 'border-box',
         display: 'flex',
         flexDirection: viewMode === 'grid' ? 'column' : 'row',
-        width: '100%',
-        height: viewMode === 'grid' ? 'auto' : '120px'
       }}
       onClick={() => navigate(`/listings/${listing.listing_id}`)}
     >
@@ -384,26 +385,25 @@ export default function Home() {
             </Box>
             
             {viewMode === 'grid' ? (
-              <Box sx={{ 
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 1,
-                justifyContent: 'flex-start'
+              <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'repeat(1, 1fr)',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(4, 1fr)'
+                },
+                gap: 2,
+                width: '100%'
               }}>
                 {listings.map(listing => (
-                  <Box key={listing.listing_id} sx={{ 
-                    flex: { xs: '0 0 100%', sm: '0 0 calc(50% - 4px)', md: '0 0 calc(25% - 6px)' },
-                    display: 'flex'
-                  }}>
-                    <ListingCard listing={listing} />
-                  </Box>
+                  <ListingCard key={listing.listing_id} listing={listing} viewMode="grid" />
                 ))}
               </Box>
             ) : (
               <Grid container spacing={2} sx={{ width: '100%', margin: 0 }}>
                 {listings.map(listing => (
-                  <Grid item xs={12} sm={6} key={listing.listing_id} sx={{ display: 'flex' }}>
-                    <ListingCard listing={listing} sx={{ width: '100%' }} />
+                  <Grid item xs={12} sm={6} key={listing.listing_id} sx={{ display: 'flex', width: '100%' }}>
+                    <ListingCard listing={listing} viewMode="list" />
                   </Grid>
                 ))}
               </Grid>
