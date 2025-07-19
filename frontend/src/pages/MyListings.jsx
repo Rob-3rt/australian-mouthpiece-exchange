@@ -18,7 +18,10 @@ import {
   DialogActions,
   TextField,
   MenuItem,
-  Autocomplete
+  Autocomplete,
+  Tabs,
+  Tab,
+  Box as MuiBox
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -122,6 +125,7 @@ export default function MyListings() {
   const [editingListing, setEditingListing] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
+  const [tab, setTab] = useState('active');
 
   const { register, handleSubmit, reset, setValue, watch } = useForm({
     defaultValues: {
@@ -442,24 +446,43 @@ export default function MyListings() {
           </Box>
         ) : (
           <>
-            <ListingSection 
-              title="Active Listings" 
-              listings={activeListings} 
-              status="active"
-              emptyMessage="No active listings. Create a new listing to get started!"
-            />
-            <ListingSection 
-              title="Paused Listings" 
-              listings={pausedListings} 
-              status="paused"
-              emptyMessage="No paused listings."
-            />
-            <ListingSection 
-              title="Sold Listings" 
-              listings={soldListings} 
-              status="sold"
-              emptyMessage="No sold listings."
-            />
+            <MuiBox sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+              <Tabs
+                value={tab}
+                onChange={(_, newValue) => setTab(newValue)}
+                textColor="primary"
+                indicatorColor="primary"
+                aria-label="listing tabs"
+              >
+                <Tab label={`Active (${activeListings.length})`} value="active" />
+                <Tab label={`Paused (${pausedListings.length})`} value="paused" />
+                <Tab label={`Sold (${soldListings.length})`} value="sold" />
+              </Tabs>
+            </MuiBox>
+            {tab === 'active' && (
+              <ListingSection 
+                title="Active Listings" 
+                listings={activeListings} 
+                status="active"
+                emptyMessage="No active listings. Create a new listing to get started!"
+              />
+            )}
+            {tab === 'paused' && (
+              <ListingSection 
+                title="Paused Listings" 
+                listings={pausedListings} 
+                status="paused"
+                emptyMessage="No paused listings."
+              />
+            )}
+            {tab === 'sold' && (
+              <ListingSection 
+                title="Sold Listings" 
+                listings={soldListings} 
+                status="sold"
+                emptyMessage="No sold listings."
+              />
+            )}
           </>
         )}
       </Container>
