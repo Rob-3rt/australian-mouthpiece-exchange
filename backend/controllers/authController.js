@@ -67,9 +67,8 @@ exports.register = async (req, res) => {
   try {
     const { email, password, first_name, last_name, location_state, location_postcode, nickname } = req.body;
     
-    // Debug: log the received data (excluding password)
-    console.log('Registration request received for email:', email);
-    console.log('Extracted fields (safe):', { email, first_name, last_name, location_state, location_postcode, nickname });
+    // Registration attempt for email (do not log full user object)
+    console.log('Registration attempt for email:', email);
     
     if (!email || !password || !first_name || !last_name || !location_state || !location_postcode) {
       console.log('Missing fields:', { 
@@ -108,11 +107,7 @@ exports.register = async (req, res) => {
       await sendVerificationEmail(user, req);
       console.log('Verification email sent successfully to:', user.email);
     } catch (emailError) {
-      console.log('Email verification skipped (email not configured):', emailError.message);
-      // For development/testing, log the verification URL
-      const token = jwt.sign({ userId: user.user_id }, config.jwtSecret, { expiresIn: '1d' });
-      const verifyUrl = `${config.frontendUrl}/verify-email?token=${token}`;
-      console.log('Verification URL for testing:', verifyUrl);
+      console.log('Email verification skipped (email not configured)');
     }
     
     res.status(201).json({ 

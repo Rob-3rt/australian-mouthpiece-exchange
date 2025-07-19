@@ -14,9 +14,6 @@ function isDisposableEmail(email) {
 
 // Get all listings (with optional filters in query)
 exports.getAllListings = async (req, res) => {
-  console.log('getAllListings called with URL:', req.url);
-  console.log('getAllListings called with method:', req.method);
-  console.log('getAllListings called with headers:', req.headers);
   try {
     const filters = {};
     const { instrument_type, brand, model, location_state, location_postcode, condition, price_min, price_max, open_to_swap, user_id } = req.query;
@@ -42,21 +39,17 @@ exports.getAllListings = async (req, res) => {
     if (price_min || price_max) filters.price = {};
     if (price_min) filters.price.gte = parseFloat(price_min);
     if (price_max) filters.price.lte = parseFloat(price_max);
-    console.log('Request user_id:', user_id);
-    console.log('Request user:', req.user);
+    // Only log errors or key actions, not full request/response or user objects
     // Add user_id filter
     if (user_id === 'me' && req.user && req.user.userId) {
       filters.user_id = req.user.userId;
-      console.log('Using user_id from req.user.userId:', req.user.userId);
       // Don't filter by status for "my listings" - show all statuses
     } else if (user_id && !isNaN(Number(user_id))) {
       filters.user_id = Number(user_id);
-      console.log('Using user_id from query param:', Number(user_id));
       // Don't filter by status for specific user listings - show all statuses
     } else {
       // Only show active listings for public browsing
       filters.status = 'active';
-      console.log('No user_id filter, showing only active listings');
     }
     
     // Get available models, brands, and instrument types for autocomplete (excluding the current filters)
@@ -89,8 +82,6 @@ exports.getAllListings = async (req, res) => {
       orderBy: { instrument_type: 'asc' }
     });
     
-    console.log('Filters being applied:', filters);
-    
     // Add pagination support
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 24; // Default 24 listings per page
@@ -108,8 +99,6 @@ exports.getAllListings = async (req, res) => {
     
     // Get total count for pagination
     const totalCount = await prisma.listing.count({ where: filters });
-    console.log('Found listings:', listings.length);
-    console.log('Listing statuses:', listings.map(l => ({ id: l.listing_id, status: l.status })));
     // Add effective PayPal link to each listing
     const listingsWithPaypal = listings.map(listing => ({
       ...listing,
@@ -117,8 +106,7 @@ exports.getAllListings = async (req, res) => {
     }));
     
     // Return both listings and available models/brands/instruments with pagination info
-    console.log('Sending response with', listingsWithPaypal.length, 'listings');
-    const response = {
+    res.json({
       listings: listingsWithPaypal,
       availableModels: availableModels.map(item => item.model),
       availableBrands: availableBrands.map(item => item.brand),
@@ -131,9 +119,7 @@ exports.getAllListings = async (req, res) => {
         hasNextPage: page < Math.ceil(totalCount / limit),
         hasPrevPage: page > 1
       }
-    };
-    console.log('Response data:', JSON.stringify(response, null, 2));
-    res.json(response);
+    });
   } catch (err) {
     console.error('Error in getAllListings:', err);
     res.status(500).json({ error: 'Failed to fetch listings.' });
@@ -145,19 +131,6 @@ exports.createListing = async (req, res) => {
   try {
     // Debug log incoming data (exclude photos/images)
     const { instrument_type, brand, model, condition, price, description, open_to_swap, open_to_loan, paypal_link_override, photos } = req.body;
-    console.log('Incoming listing payload:', {
-      instrument_type,
-      brand,
-      model,
-      condition,
-      price,
-      description,
-      open_to_swap,
-      open_to_loan,
-      paypal_link_override,
-      photos_count: Array.isArray(photos) ? photos.length : 0
-    });
-    const missingFields = [];
     if (!instrument_type) missingFields.push('instrument_type');
     if (!brand) missingFields.push('brand');
     if (!model) missingFields.push('model');
