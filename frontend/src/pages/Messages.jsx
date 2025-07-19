@@ -185,6 +185,17 @@ export default function Messages() {
                             {conv.other_user ? (conv.other_user.nickname || conv.other_user.name) : 'Unknown User'}
                           </Typography>
                         </Box>
+                        {conv.other_user && (
+                          <Typography variant="body2" sx={{ color: '#717171', fontSize: '13px', mb: 0.5 }}>
+                            {conv.other_user.nickname && (
+                              <span style={{ fontWeight: 500 }}>
+                                @{conv.other_user.nickname}
+                              </span>
+                            )}
+                            {conv.other_user.nickname && ' '}
+                            <span style={{ color: '#444' }}>{conv.other_user.name}</span>
+                          </Typography>
+                        )}
                         {conv.listing_brand && conv.listing_model && (
                           <Typography
                             variant="body2"

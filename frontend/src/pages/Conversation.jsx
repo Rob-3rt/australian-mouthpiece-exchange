@@ -24,6 +24,7 @@ export default function Conversation() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [listing, setListing] = useState(null);
+  const [otherUser, setOtherUser] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -39,6 +40,7 @@ export default function Conversation() {
     if (listingId) {
       fetchListing();
     }
+    fetchOtherUser();
   }, [userId, listingId]);
 
   const fetchMessages = async () => {
@@ -76,6 +78,15 @@ export default function Conversation() {
       setListing(response.data);
     } catch (error) {
       console.error('Failed to fetch listing:', error);
+    }
+  };
+
+  const fetchOtherUser = async () => {
+    try {
+      const response = await api.get(`/api/profile/${userId}`);
+      setOtherUser(response.data);
+    } catch (error) {
+      setOtherUser(null);
     }
   };
 
@@ -196,6 +207,17 @@ export default function Conversation() {
                     >
                       ${listing.price}
                     </Typography>
+                    {otherUser && (
+                      <Typography variant="body2" sx={{ color: '#717171', fontSize: '13px', mt: 0.5 }}>
+                        {otherUser.nickname && (
+                          <span style={{ fontWeight: 500 }}>
+                            @{otherUser.nickname}
+                          </span>
+                        )}
+                        {otherUser.nickname && ' '}
+                        <span style={{ color: '#444' }}>{otherUser.name}</span>
+                      </Typography>
+                    )}
                   </Box>
                 </a>
                 
