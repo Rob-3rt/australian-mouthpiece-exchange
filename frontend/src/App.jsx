@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Container, Box, Avatar, Menu, MenuItem, IconButton, Badge, useMediaQuery, useTheme } from '@mui/material';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import MenuIcon from '@mui/icons-material/Menu';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -60,7 +59,7 @@ function AdminRoute({ children }) {
 
 function NavBar({ onOpenCreateListing }) {
   const { user, logout } = useAuth();
-  const { handleMenuOpen, unreadCount } = useNotifications();
+  const { unreadCount } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -275,17 +274,6 @@ function NavBar({ onOpenCreateListing }) {
                   >
                     Add Listing
                   </Button>
-                  <IconButton
-                    onClick={handleMenuOpen}
-                    sx={{ 
-                      color: '#222222',
-                      '&:hover': { backgroundColor: '#f7f7f7' }
-                    }}
-                  >
-                    <Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="error">
-                      <NotificationsIcon />
-                    </Badge>
-                  </IconButton>
                   <IconButton 
                     onClick={handleMenu} 
                     sx={{ 
@@ -310,19 +298,6 @@ function NavBar({ onOpenCreateListing }) {
           {/* Mobile Navigation */}
           {isMobile && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {user && (
-                <IconButton
-                  onClick={handleMenuOpen}
-                  sx={{ 
-                    color: '#222222',
-                    '&:hover': { backgroundColor: '#f7f7f7' }
-                  }}
-                >
-                  <Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="error">
-                    <NotificationsIcon />
-                  </Badge>
-                </IconButton>
-              )}
               
               <IconButton
                 onClick={handleMobileMenu}
