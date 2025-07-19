@@ -104,7 +104,7 @@ export default function AdminDashboard() {
       const response = await api.delete(`/api/admin/users/${userId}`);
       // If backend returns a warning, show confirmation and force delete if confirmed
       if (response.data && response.data.warning) {
-        const msg = `${response.data.message}\nListings: ${response.data.activeListings}, Loans: ${response.data.activeLoans}\nProceed?`;
+        const msg = `Warning: this user has active listings or loans.\nListings: ${response.data.activeListings}, Loans: ${response.data.activeLoans}\nDo you want to proceed and force delete this user?`;
         if (window.confirm(msg)) {
           // Admin confirmed, force delete
           const forceResponse = await api.delete(`/api/admin/users/${userId}?force=true`);
