@@ -112,7 +112,7 @@ exports.sendMessage = async (req, res) => {
       }),
       prisma.user.findUnique({
         where: { user_id: Number(to_user_id) },
-        select: { user_id: true, name: true, nickname: true, email: true }
+        select: { user_id: true, name: true, nickname: true, email: true, email_notifications: true }
       })
     ]);
 
@@ -147,8 +147,8 @@ exports.sendMessage = async (req, res) => {
     // Send real-time notification
     const recipientOnline = socketService.sendMessageNotification(message, sender, recipient, listing);
 
-    // Send email notification if recipient is offline and email is configured
-    if (!recipientOnline && notificationService.isEmailConfigured()) {
+    // Send email notification if recipient allows it, is offline, and email is configured
+    if (recipient.email_notifications !== false && !recipientOnline && notificationService.isEmailConfigured()) {
       // Don't await this to avoid blocking the response
       notificationService.sendMessageNotification(recipient, sender, content, listing)
         .catch(err => console.error('Failed to send email notification:', err));

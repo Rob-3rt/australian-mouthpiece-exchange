@@ -35,6 +35,7 @@ model User {
   messages_received Message[]     @relation("MessagesReceived")
   flagged_reports   FlaggedContent[] @relation("FlagsReported")
   is_admin          Boolean        @default(false)
+  email_notifications Boolean     @default(true)
   loans_given       Loan[]        @relation("LoansGiven")
   loans_received    Loan[]        @relation("LoansReceived")
 }

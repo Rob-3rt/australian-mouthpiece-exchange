@@ -19,7 +19,8 @@ exports.getMyProfile = async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { user_id: req.user.userId },
       select: {
-        user_id: true, name: true, nickname: true, email: true, location_state: true, location_postcode: true, average_rating: true, rating_count: true, paypal_link: true, join_date: true, status: true
+        user_id: true, name: true, nickname: true, email: true, location_state: true, location_postcode: true, average_rating: true, rating_count: true, paypal_link: true, join_date: true, status: true,
+        email_notifications: true
       }
     });
     res.json(user);
@@ -31,7 +32,7 @@ exports.getMyProfile = async (req, res) => {
 // Update own profile
 exports.updateMyProfile = async (req, res) => {
   try {
-    const { name, nickname, location_state, location_postcode, paypal_link } = req.body;
+    const { name, nickname, location_state, location_postcode, paypal_link, email_notifications } = req.body;
     let validatedPaypal = null;
     if (paypal_link) {
       if (PAYPAL_ME_REGEX.test(paypal_link)) {
@@ -54,9 +55,10 @@ exports.updateMyProfile = async (req, res) => {
     }
     const user = await prisma.user.update({
       where: { user_id: req.user.userId },
-      data: { name, nickname, location_state, location_postcode, paypal_link: validatedPaypal },
+      data: { name, nickname, location_state, location_postcode, paypal_link: validatedPaypal, ...(email_notifications !== undefined ? { email_notifications } : {}) },
       select: {
-        user_id: true, name: true, nickname: true, email: true, location_state: true, location_postcode: true, average_rating: true, rating_count: true, paypal_link: true, join_date: true, status: true
+        user_id: true, name: true, nickname: true, email: true, location_state: true, location_postcode: true, average_rating: true, rating_count: true, paypal_link: true, join_date: true, status: true,
+        email_notifications: true
       }
     });
     res.json(user);
