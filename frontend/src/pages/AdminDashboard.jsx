@@ -33,6 +33,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import EmailIcon from '@mui/icons-material/Email';
 import api from '../api/axios.js';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -154,6 +155,25 @@ export default function AdminDashboard() {
       fetchData();
     } catch (error) {
       setSnackbar({ open: true, message: 'Failed to update admin status', severity: 'error' });
+    }
+  };
+
+  const handleResendVerification = async (userId, userEmail) => {
+    if (!window.confirm(`Resend verification email to ${userEmail}?`)) return;
+    try {
+      await api.post(`/api/admin/users/${userId}/resend-verification`);
+      setSnackbar({ 
+        open: true, 
+        message: `Verification email sent to ${userEmail}`, 
+        severity: 'success' 
+      });
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      setSnackbar({ 
+        open: true, 
+        message: error.response?.data?.error || 'Failed to resend verification email', 
+        severity: 'error' 
+      });
     }
   };
 
@@ -672,6 +692,17 @@ export default function AdminDashboard() {
                             >
                               <EditIcon />
                             </IconButton>
+                            {!user.email_verified && (
+                              <Tooltip title="Resend verification email">
+                                <IconButton
+                                  onClick={() => handleResendVerification(user.user_id, user.email)}
+                                  size="small"
+                                  sx={{ color: '#2196f3' }}
+                                >
+                                  <EmailIcon />
+                                </IconButton>
+                              </Tooltip>
+                            )}
                             <IconButton
                               onClick={() => {
                                 console.log('Delete button clicked for user:', user.user_id);

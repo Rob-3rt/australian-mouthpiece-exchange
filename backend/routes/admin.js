@@ -253,4 +253,135 @@ router.delete('/unverified-users', async (req, res) => {
   }
 });
 
+// Test email endpoint (admin only)
+router.post('/test-email', async (req, res) => {
+  try {
+    const { to_email, test_type } = req.body;
+    
+    if (!to_email) {
+      return res.status(400).json({ error: 'Email address is required.' });
+    }
+
+    const notificationService = require('../utils/notificationService');
+    
+    if (!notificationService.isEmailConfigured()) {
+      return res.status(400).json({ 
+        error: 'Email service not configured.',
+        config: {
+          smtpHost: process.env.SMTP_HOST ? 'Set' : 'Not set',
+          smtpUser: process.env.SMTP_USER ? 'Set' : 'Not set',
+          smtpPass: process.env.SMTP_PASS ? 'Set' : 'Not set',
+          emailFrom: process.env.EMAIL_FROM ? 'Set' : 'Not set'
+        }
+      });
+    }
+
+    // Create test data
+    const testRecipient = { name: 'Test User', email: to_email };
+    const testSender = { name: 'Test Sender', nickname: 'TestSender', user_id: 1 };
+    const testMessage = 'This is a test email from The Australian Mouthpiece Exchange.';
+    const testListing = { brand: 'Test Brand', model: 'Test Model', listing_id: 1 };
+
+    // Send test email
+    const result = await notificationService.sendMessageNotification(
+      testRecipient,
+      testSender,
+      testMessage,
+      testListing
+    );
+
+    if (result) {
+      res.json({ 
+        success: true, 
+        message: 'Test email sent successfully!',
+        sentTo: to_email
+      });
+    } else {
+      res.status(500).json({ 
+        error: 'Failed to send test email.',
+        sentTo: to_email
+      });
+    }
+  } catch (error) {
+    console.error('Test email error:', error);
+    res.status(500).json({ 
+      error: 'Test email failed.',
+      details: error.message
+    });
+  }
+});
+
+// Resend verification email (admin only)
+router.post('/users/:id/resend-verification', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    console.log(`Attempting to resend verification email for user ID: ${userId}`);
+    
+    // Find the user
+    const user = await prisma.user.findUnique({
+      where: { user_id: userId }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    
+    if (user.email_verified) {
+      return res.status(400).json({ error: 'User email is already verified.' });
+    }
+    
+    // Generate verification token
+    const jwt = require('jsonwebtoken');
+    const config = require('../config');
+    const token = jwt.sign({ userId: user.user_id }, config.jwtSecret, { expiresIn: '1d' });
+    const verifyUrl = `${config.frontendUrl}/verify-email?token=${token}`;
+    
+    // Send verification email
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransporter({
+      host: config.smtpHost,
+      port: config.smtpPort,
+      auth: { user: config.smtpUser, pass: config.smtpPass },
+    });
+    
+    await transporter.sendMail({
+      from: config.emailFrom,
+      to: user.email,
+      subject: 'Verify your email - The Australian Mouthpiece Exchange',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #4a1d3f;">Email Verification</h2>
+          <p>Hi ${user.name},</p>
+          <p>An administrator has requested to resend your email verification link.</p>
+          <p>Please verify your email by clicking the link below:</p>
+          <a href="${verifyUrl}" 
+             style="background-color: #4a1d3f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
+            Verify Email
+          </a>
+          <p style="margin-top: 30px; color: #666; font-size: 14px;">
+            This link will expire in 24 hours.
+          </p>
+          <p style="color: #666; font-size: 14px;">
+            If you didn't request this verification, please ignore this email.
+          </p>
+        </div>
+      `,
+    });
+    
+    console.log(`Verification email resent successfully to: ${user.email}`);
+    res.json({ 
+      success: true, 
+      message: 'Verification email sent successfully!',
+      sentTo: user.email
+    });
+    
+  } catch (error) {
+    console.error('Error resending verification email:', error);
+    res.status(500).json({ 
+      error: 'Failed to resend verification email.',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router; 

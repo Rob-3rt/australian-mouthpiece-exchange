@@ -1,7 +1,18 @@
 const nodemailer = require('nodemailer');
 const config = require('../config');
 
-// Email transporter setup
+// Try to use Resend if available, fallback to nodemailer
+let resend = null;
+try {
+  resend = require('resend');
+  if (config.resendApiKey) {
+    resend = new resend.Resend(config.resendApiKey);
+  }
+} catch (error) {
+  console.log('Resend not installed, using nodemailer');
+}
+
+// Email transporter setup (fallback)
 const transporter = nodemailer.createTransport({
   host: config.smtpHost,
   port: config.smtpPort,
@@ -33,12 +44,22 @@ async function sendMessageNotification(recipient, sender, message, listing = nul
       </div>
     `;
 
-    await transporter.sendMail({
-      from: config.emailFrom,
-      to: recipient.email,
-      subject: subject,
-      html: html,
-    });
+    // Try Resend first, fallback to nodemailer
+    if (resend && config.resendApiKey) {
+      await resend.emails.send({
+        from: config.emailFrom,
+        to: recipient.email,
+        subject: subject,
+        html: html,
+      });
+    } else {
+      await transporter.sendMail({
+        from: config.emailFrom,
+        to: recipient.email,
+        subject: subject,
+        html: html,
+      });
+    }
 
     console.log(`Message notification email sent to ${recipient.email}`);
     return true;
@@ -50,7 +71,7 @@ async function sendMessageNotification(recipient, sender, message, listing = nul
 
 // Check if email configuration is available
 function isEmailConfigured() {
-  return !!(config.smtpHost && config.smtpUser && config.smtpPass && config.emailFrom);
+  return !!(config.resendApiKey || (config.smtpHost && config.smtpUser && config.smtpPass && config.emailFrom));
 }
 
 module.exports = {
