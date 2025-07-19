@@ -4,7 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import CloseIcon from '@mui/icons-material/Close';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import api from '../api/axios.js';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -160,6 +160,12 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
       setIsSubmitting(false);
     }
   };
+  const instrumentType = useWatch({ control: register, name: 'instrument_type' });
+  const brand = useWatch({ control: register, name: 'brand' });
+  const model = useWatch({ control: register, name: 'model' });
+  const openToSwap = useWatch({ control: register, name: 'open_to_swap' });
+  const openToLoan = useWatch({ control: register, name: 'open_to_loan' });
+
   return (
     <Dialog 
       open={open} 
@@ -192,6 +198,8 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
           <Autocomplete
             freeSolo
             options={INSTRUMENT_TYPES}
+            value={instrumentType || ''}
+            onChange={(event, newValue) => setValue('instrument_type', newValue || '')}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -212,12 +220,13 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
                 }}
               />
             )}
-            onChange={(event, newValue) => setValue('instrument_type', newValue || '')}
             onInputChange={(event, newInputValue) => setValue('instrument_type', newInputValue || '')}
           />
           <Autocomplete
             freeSolo
             options={BRANDS}
+            value={brand || ''}
+            onChange={(event, newValue) => setValue('brand', newValue || '')}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -238,14 +247,15 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
                 }}
               />
             )}
-            onChange={(event, newValue) => setValue('brand', newValue || '')}
             onInputChange={(event, newInputValue) => setValue('brand', newInputValue || '')}
           />
           <TextField 
             label="Model / Size" 
             fullWidth 
             margin="normal" 
+            value={model || ''}
             {...register('model', { required: true })}
+            onChange={e => setValue('model', e.target.value)}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '8px',
@@ -263,7 +273,9 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
             select 
             fullWidth 
             margin="normal" 
+            value={useWatch({ control: register, name: 'condition' }) || ''}
             {...register('condition', { required: true })}
+            onChange={e => setValue('condition', e.target.value)}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '8px',
@@ -285,7 +297,9 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
             type="number" 
             fullWidth 
             margin="normal" 
+            value={useWatch({ control: register, name: 'price' }) || ''}
             {...register('price', { required: true })}
+            onChange={e => setValue('price', e.target.value)}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '8px',
@@ -304,7 +318,9 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
             margin="normal" 
             multiline 
             rows={3} 
+            value={useWatch({ control: register, name: 'description' }) || ''}
             {...register('description', { required: true })}
+            onChange={e => setValue('description', e.target.value)}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '8px',
@@ -466,12 +482,14 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
               </Box>
             </Box>
           )}
-          <TextField 
-            label="Open to Swap" 
-            select 
-            fullWidth 
-            margin="normal" 
-            {...register('open_to_swap')}
+          <TextField
+            label="Open to Swap"
+            select
+            fullWidth
+            margin="normal"
+            value={openToSwap || 'false'}
+            {...register('open_to_swap', { required: true })}
+            onChange={e => setValue('open_to_swap', e.target.value)}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '8px',
@@ -487,12 +505,14 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
             <MenuItem value="true">Yes</MenuItem>
             <MenuItem value="false">No</MenuItem>
           </TextField>
-          <TextField 
-            label="Open to Loan" 
-            select 
-            fullWidth 
-            margin="normal" 
-            {...register('open_to_loan')}
+          <TextField
+            label="Open to Loan"
+            select
+            fullWidth
+            margin="normal"
+            value={openToLoan || 'false'}
+            {...register('open_to_loan', { required: true })}
+            onChange={e => setValue('open_to_loan', e.target.value)}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '8px',
