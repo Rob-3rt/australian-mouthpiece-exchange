@@ -400,10 +400,10 @@ export default function Home() {
                 ))}
               </Box>
             ) : (
-              <Grid container spacing={3}>
+              <Grid container spacing={2} sx={{ width: '100%', margin: 0 }}>
                 {listings.map(listing => (
-                  <Grid item xs={12} sm={6} key={listing.listing_id}>
-                    <ListingCard listing={listing} />
+                  <Grid item xs={12} sm={6} key={listing.listing_id} sx={{ display: 'flex' }}>
+                    <ListingCard listing={listing} sx={{ width: '100%' }} />
                   </Grid>
                 ))}
               </Grid>
