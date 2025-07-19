@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from '../api/axios';
+import { Tabs, Tab, Box as MuiBox } from '@mui/material';
 
 const LoanManagement = () => {
   const { user } = useAuth();
@@ -171,33 +172,20 @@ const LoanManagement = () => {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <ul className="nav nav-tabs mb-3">
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all')}
-          >
-            All Loans
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'given' ? 'active' : ''}`}
-            onClick={() => setActiveTab('given')}
-          >
-            Loans Given
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'received' ? 'active' : ''}`}
-            onClick={() => setActiveTab('received')}
-          >
-            Loans Received
-          </button>
-        </li>
-      </ul>
+      {/* Material-UI Tabs Navigation */}
+      <MuiBox sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(_, newValue) => setActiveTab(newValue)}
+          textColor="primary"
+          indicatorColor="primary"
+          aria-label="loan tabs"
+        >
+          <Tab label="All Loans" value="all" />
+          <Tab label="Loans Given" value="given" />
+          <Tab label="Loans Received" value="received" />
+        </Tabs>
+      </MuiBox>
 
       {/* Loans List */}
       {loans.length === 0 ? (
