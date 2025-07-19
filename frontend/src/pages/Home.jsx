@@ -87,17 +87,17 @@ export default function Home() {
           borderColor: '#222222'
         },
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: viewMode === 'grid' ? 'column' : 'row',
         width: '100%',
-        height: viewMode === 'grid' ? 'auto' : 'auto'
+        height: viewMode === 'grid' ? 'auto' : '120px'
       }}
       onClick={() => navigate(`/listings/${listing.listing_id}`)}
     >
       {/* Image container */}
       <Box sx={{ 
         position: 'relative',
-        width: viewMode === 'grid' ? '100%' : '200px',
-        height: viewMode === 'grid' ? 280 : 150,
+        width: viewMode === 'grid' ? '100%' : '120px',
+        height: viewMode === 'grid' ? 280 : '100%',
         backgroundColor: '#f7f7f7',
         overflow: 'hidden',
         flexShrink: 0
@@ -121,7 +121,7 @@ export default function Home() {
             alignItems: 'center',
             justifyContent: 'center',
             color: '#717171',
-            fontSize: '14px'
+            fontSize: '12px'
           }}>
             No Image
           </Box>
@@ -130,21 +130,21 @@ export default function Home() {
       
       {/* Content */}
       <Box sx={{ 
-        p: 3, 
+        p: viewMode === 'grid' ? 3 : 2, 
         flexGrow: 1, 
         display: 'flex', 
         flexDirection: viewMode === 'grid' ? 'column' : 'row',
         alignItems: viewMode === 'list' ? 'center' : 'stretch',
-        gap: viewMode === 'list' ? 3 : 0
+        gap: viewMode === 'list' ? 2 : 0
       }}>
         <Box sx={{ flex: 1 }}>
           <Typography 
             variant="h6" 
             sx={{ 
               fontWeight: 600, 
-              fontSize: '16px',
+              fontSize: viewMode === 'grid' ? '16px' : '14px',
               color: '#222222',
-              mb: 1,
+              mb: viewMode === 'grid' ? 1 : 0.5,
               lineHeight: 1.2
             }}
           >
@@ -155,8 +155,8 @@ export default function Home() {
             variant="body2" 
             sx={{ 
               color: '#717171',
-              fontSize: '14px',
-              mb: 1
+              fontSize: viewMode === 'grid' ? '14px' : '12px',
+              mb: viewMode === 'grid' ? 1 : 0.5
             }}
           >
             {listing.instrument_type} • {listing.condition}
@@ -166,9 +166,9 @@ export default function Home() {
             variant="h6" 
             sx={{ 
               fontWeight: 700,
-              fontSize: '18px',
+              fontSize: viewMode === 'grid' ? '18px' : '16px',
               color: '#222222',
-              mb: 1
+              mb: viewMode === 'grid' ? 1 : 0.5
             }}
           >
             ${listing.price}
@@ -198,14 +198,14 @@ export default function Home() {
               variant="body2" 
               sx={{ 
                 color: '#717171',
-                fontSize: '14px',
+                fontSize: '12px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 display: '-webkit-box',
                 WebkitLineClamp: 1,
                 WebkitBoxOrient: 'vertical',
                 lineHeight: 1.4,
-                maxWidth: '300px'
+                maxWidth: '250px'
               }}
             >
               {listing.description}
@@ -221,7 +221,7 @@ export default function Home() {
           borderTop: viewMode === 'grid' ? '1px solid #f0f0f0' : 'none',
           marginTop: viewMode === 'grid' ? 'auto' : 0,
           flexDirection: viewMode === 'list' ? 'column' : 'row',
-          gap: viewMode === 'list' ? 1 : 0,
+          gap: viewMode === 'list' ? 0.5 : 0,
           alignItems: viewMode === 'list' ? 'flex-end' : 'center'
         }}>
           <Box sx={{ textAlign: viewMode === 'list' ? 'right' : 'left' }}>
@@ -229,7 +229,7 @@ export default function Home() {
               variant="body2" 
               sx={{ 
                 fontWeight: 500,
-                fontSize: '14px',
+                fontSize: viewMode === 'grid' ? '14px' : '12px',
                 color: '#222222'
               }}
             >
@@ -239,7 +239,7 @@ export default function Home() {
               variant="caption" 
               sx={{ 
                 color: '#717171',
-                fontSize: '12px'
+                fontSize: viewMode === 'grid' ? '12px' : '10px'
               }}
             >
               {listing.user.location_state}
@@ -249,8 +249,11 @@ export default function Home() {
             value={listing.user.average_rating || 0} 
             precision={0.1} 
             readOnly 
-            size="small"
-            sx={{ '& .MuiRating-iconFilled': { color: '#ff385c' } }}
+            size={viewMode === 'grid' ? 'small' : 'small'}
+            sx={{ 
+              '& .MuiRating-iconFilled': { color: '#ff385c' },
+              fontSize: viewMode === 'list' ? '14px' : 'inherit'
+            }}
           />
         </Box>
       </Box>
