@@ -128,6 +128,11 @@ exports.getAllListings = async (req, res) => {
 
 // Create a new listing
 exports.createListing = async (req, res) => {
+  console.log('DEBUG: POST /api/listings hit');
+  console.log('DEBUG: Incoming body (excluding photos):', {
+    ...req.body,
+    photos: req.body.photos ? `[${Array.isArray(req.body.photos) ? req.body.photos.length : 'not array'}]` : undefined
+  });
   try {
     // Debug log incoming data (exclude photos/images)
     const { instrument_type, brand, model, condition, price, description, open_to_swap, open_to_loan, paypal_link_override, photos } = req.body;

@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config');
 
 module.exports = (req, res, next) => {
+  console.log('DEBUG: Auth middleware hit for', req.method, req.url);
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     // Only log missing token for debugging
