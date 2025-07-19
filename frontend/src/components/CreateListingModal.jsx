@@ -99,6 +99,7 @@ export default function CreateListingModal({ open, onClose, onSuccess }) {
     });
   }
   const handleListingFormSubmit = async (data) => {
+    console.log('DEBUG: Form submitted', data);
     setIsSubmitting(true);
     try {
       let photos = [];
@@ -123,13 +124,16 @@ export default function CreateListingModal({ open, onClose, onSuccess }) {
         open_to_swap: data.open_to_swap,
         open_to_loan: data.open_to_loan
       };
+      console.log('DEBUG: Payload to be sent', payload);
       const res = await api.post('/api/listings', payload);
+      console.log('DEBUG: API response', res);
       setSnackbar({ open: true, message: 'Listing created!', severity: 'success' });
       if (onSuccess && res.data && res.data.listing_id) onSuccess(res.data.listing_id);
       reset();
       setSelectedImages([]);
       onClose();
     } catch (err) {
+      console.error('DEBUG: Error during listing creation', err);
       const errorMessage = err.response?.data?.error || 'Failed to save listing. Please check your image sizes (max 5MB each).';
       setSnackbar({ open: true, message: errorMessage, severity: 'error' });
     } finally {
