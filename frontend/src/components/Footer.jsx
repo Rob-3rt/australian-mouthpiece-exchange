@@ -28,7 +28,7 @@ export default function Footer() {
             color="text.secondary"
             sx={{ textAlign: { xs: 'center', md: 'left' } }}
           >
-            © 2024 The Australian Mouthpiece Exchange. All rights reserved.
+            © 2025 The Australian Mouthpiece Exchange. All rights reserved.
           </Typography>
           
           <Box
