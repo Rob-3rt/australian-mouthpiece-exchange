@@ -159,6 +159,7 @@ router.patch('/users/:id/admin', async (req, res) => {
 router.delete('/users/:id', async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
+    const force = req.query.force === 'true';
     console.log(`Attempting to delete user with ID: ${userId}`);
     
     // Don't allow admin to delete themselves
@@ -174,13 +175,38 @@ router.delete('/users/:id', async (req, res) => {
     if (!userToDelete) {
       return res.status(404).json({ error: 'User not found.' });
     }
-    
+
+    // Check for active listings or loans
+    const userListings = await prisma.listing.findMany({
+      where: { user_id: userId },
+      select: { listing_id: true }
+    });
+    const listingIds = userListings.map(l => l.listing_id);
+    const activeListingsCount = userListings.length;
+    const activeLoansCount = await prisma.loan.count({ where: { listing_id: { in: listingIds } } });
+
+    if ((activeListingsCount > 0 || activeLoansCount > 0) && !force) {
+      return res.status(400).json({
+        warning: true,
+        message: 'Warning: this user has active listings or loans - do you want to proceed?',
+        activeListings: activeListingsCount,
+        activeLoans: activeLoansCount
+      });
+    }
+
     console.log(`Deleting related data for user: ${userToDelete.email}`);
-    
-    // Delete user's listings, messages, and ratings first
+
+    // Delete all loans for the user's listings
+    if (listingIds.length > 0) {
+      const loansDeleted = await prisma.loan.deleteMany({ where: { listing_id: { in: listingIds } } });
+      console.log(`Deleted ${loansDeleted.count} loans for user's listings`);
+    }
+
+    // Delete user's listings
     const listingsDeleted = await prisma.listing.deleteMany({ where: { user_id: userId } });
     console.log(`Deleted ${listingsDeleted.count} listings`);
     
+    // Delete user's messages
     const messagesDeleted = await prisma.message.deleteMany({ 
       where: { 
         OR: [
@@ -191,10 +217,12 @@ router.delete('/users/:id', async (req, res) => {
     });
     console.log(`Deleted ${messagesDeleted.count} messages`);
     
+    // Delete user's ratings
     const ratingsFromDeleted = await prisma.peerRating.deleteMany({ where: { from_user_id: userId } });
     const ratingsToDeleted = await prisma.peerRating.deleteMany({ where: { to_user_id: userId } });
     console.log(`Deleted ${ratingsFromDeleted.count + ratingsToDeleted.count} ratings`);
     
+    // Delete user's flags
     const flagsDeleted = await prisma.flaggedContent.deleteMany({ where: { reporter_id: userId } });
     console.log(`Deleted ${flagsDeleted.count} flagged content`);
     

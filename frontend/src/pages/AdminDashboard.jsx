@@ -102,12 +102,29 @@ export default function AdminDashboard() {
     try {
       console.log('Sending delete request to:', `/api/admin/users/${userId}`);
       const response = await api.delete(`/api/admin/users/${userId}`);
-      console.log('Delete response:', response);
+      // If backend returns a warning, show confirmation and force delete if confirmed
+      if (response.data && response.data.warning) {
+        const msg = `${response.data.message}\nListings: ${response.data.activeListings}, Loans: ${response.data.activeLoans}\nProceed?`;
+        if (window.confirm(msg)) {
+          // Admin confirmed, force delete
+          const forceResponse = await api.delete(`/api/admin/users/${userId}?force=true`);
+          setSnackbar({ open: true, message: 'User deleted successfully', severity: 'success' });
+          fetchData();
+          return;
+        } else {
+          setSnackbar({ open: true, message: 'User deletion cancelled.', severity: 'info' });
+          return;
+        }
+      }
       setSnackbar({ open: true, message: 'User deleted successfully', severity: 'success' });
       fetchData();
     } catch (error) {
       console.error('Delete user error:', error);
-      setSnackbar({ open: true, message: 'Failed to delete user', severity: 'error' });
+      let msg = 'Failed to delete user';
+      if (error.response && error.response.data && error.response.data.message) {
+        msg = error.response.data.message;
+      }
+      setSnackbar({ open: true, message: msg, severity: 'error' });
     }
   };
 
