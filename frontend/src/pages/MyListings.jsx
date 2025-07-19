@@ -418,29 +418,10 @@ export default function MyListings() {
   return (
     <Box sx={{ backgroundColor: '#fff', minHeight: '100vh', py: { xs: 2, md: 6 } }}>
       <Container maxWidth="lg">
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Box display="flex" alignItems="center" mb={4}>
           <Typography variant="h3" sx={{ fontWeight: 700, color: '#222', letterSpacing: -0.5 }}>
             My Listings
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenModal()}
-            sx={{
-              backgroundColor: '#4a1d3f',
-              color: 'white',
-              fontWeight: 600,
-              fontSize: '16px',
-              textTransform: 'none',
-              borderRadius: '22px',
-              px: 4,
-              py: 1.5,
-              boxShadow: 'none',
-              '&:hover': { backgroundColor: '#3a162f' }
-            }}
-          >
-            Add New Listing
-          </Button>
         </Box>
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center" p={8}>
@@ -458,27 +439,6 @@ export default function MyListings() {
             fontWeight: 500
           }}>
             You haven't created any listings yet.
-            <Box textAlign="center" mt={3}>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => handleOpenModal()}
-                sx={{
-                  backgroundColor: '#4a1d3f',
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: '16px',
-                  textTransform: 'none',
-                  borderRadius: '22px',
-                  px: 4,
-                  py: 1.5,
-                  boxShadow: 'none',
-                  '&:hover': { backgroundColor: '#3a162f' }
-                }}
-              >
-                Create Your First Listing
-              </Button>
-            </Box>
           </Box>
         ) : (
           <>
@@ -504,128 +464,7 @@ export default function MyListings() {
         )}
       </Container>
 
-      {/* Create/Edit Listing Modal */}
-      <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingListing ? 'Edit Listing' : 'Create New Listing'}
-        </DialogTitle>
-        <DialogContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Autocomplete
-              freeSolo
-              options={INSTRUMENT_TYPES}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Instrument Type"
-                  margin="normal"
-                  required
-                  {...register('instrument_type', { required: true })}
-                />
-              )}
-              onChange={(event, newValue) => setValue('instrument_type', newValue || '')}
-            />
-            <Autocomplete
-              freeSolo
-              options={BRANDS}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Mouthpiece Brand"
-                  margin="normal"
-                  required
-                  {...register('brand', { required: true })}
-                />
-              )}
-              onChange={(event, newValue) => setValue('brand', newValue || '')}
-            />
-            <TextField 
-              label="Model / Size" 
-              fullWidth 
-              margin="normal" 
-              {...register('model', { required: true })} 
-            />
-            <TextField 
-              label="Condition" 
-              select 
-              fullWidth 
-              margin="normal" 
-              {...register('condition', { required: true })}
-            >
-              {CONDITIONS.map(condition => (
-                <MenuItem key={condition} value={condition}>{condition}</MenuItem>
-              ))}
-            </TextField>
-            <TextField 
-              label="Price" 
-              type="number" 
-              fullWidth 
-              margin="normal" 
-              {...register('price', { required: true })} 
-            />
-            <TextField 
-              label="Description" 
-              fullWidth 
-              margin="normal" 
-              multiline 
-              rows={3} 
-              {...register('description', { required: true })} 
-            />
-            <TextField 
-              label="Photos (max 6)" 
-              type="file" 
-              inputProps={{ multiple: true, accept: 'image/*' }} 
-              fullWidth 
-              margin="normal" 
-              onChange={handleImageChange} 
-            />
-            {selectedImages.length > 0 && (
-              <Box display="flex" flexWrap="wrap" gap={1} mt={2}>
-                {selectedImages.map((img, idx) => (
-                  <Box key={idx} position="relative">
-                    <img 
-                      src={img.preview} 
-                      alt={`preview-${idx}`} 
-                      style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }} 
-                    />
-                    <IconButton
-                      size="small"
-                      sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'white' }}
-                      onClick={() => handleRemoveImage(idx)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                ))}
-              </Box>
-            )}
-            <TextField 
-              label="Open to Swap" 
-              select 
-              fullWidth 
-              margin="normal" 
-              {...register('open_to_swap')}
-            >
-              <MenuItem value="true">Yes</MenuItem>
-              <MenuItem value="false">No</MenuItem>
-            </TextField>
-          </form>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseModal} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button 
-            type="submit" 
-            form="listing-form" 
-            variant="contained" 
-            disabled={isSubmitting}
-            onClick={handleSubmit(onSubmit)}
-          >
-            {editingListing ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Removed Add Listing modal and button; use nav bar button instead */}
 
       <Snackbar
         open={snackbar.open}
