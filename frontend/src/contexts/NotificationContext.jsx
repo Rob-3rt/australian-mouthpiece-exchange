@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { Snackbar, Alert, Badge, IconButton, Menu, MenuItem, Typography, Box, Divider } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import { API_CONFIG } from '../config.js';
 
 const NotificationContext = createContext();
 
@@ -156,7 +157,7 @@ export const NotificationProvider = ({ children }) => {
 
   const refreshUnreadCount = async () => {
     try {
-      const response = await fetch('/api/messages', {
+      const response = await fetch(`${API_CONFIG.getBaseURL()}/api/messages`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
