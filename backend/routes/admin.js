@@ -433,4 +433,64 @@ router.post('/users/:id/resend-verification', async (req, res) => {
   }
 });
 
+// Delete listing (admin only)
+router.delete('/listings/:id', async (req, res) => {
+  try {
+    const listingId = parseInt(req.params.id);
+    console.log(`Admin attempting to delete listing with ID: ${listingId}`);
+    
+    // Check if listing exists
+    const listing = await prisma.listing.findUnique({
+      where: { listing_id: listingId },
+      include: {
+        user: { select: { user_id: true, name: true, email: true } }
+      }
+    });
+    
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found.' });
+    }
+
+    console.log(`Deleting listing: ${listing.listing_id} by user: ${listing.user.email}`);
+
+    // Delete all related loans first
+    const loansDeleted = await prisma.loan.deleteMany({ 
+      where: { listing_id: listingId } 
+    });
+    console.log(`Deleted ${loansDeleted.count} loans for listing`);
+
+    // Delete all related messages
+    const messagesDeleted = await prisma.message.deleteMany({ 
+      where: { listing_id: listingId } 
+    });
+    console.log(`Deleted ${messagesDeleted.count} messages for listing`);
+
+    // Delete all related flags
+    const flagsDeleted = await prisma.flaggedContent.deleteMany({ 
+      where: { 
+        content_type: 'listing',
+        content_id: listingId 
+      } 
+    });
+    console.log(`Deleted ${flagsDeleted.count} flags for listing`);
+
+    // Finally delete the listing
+    await prisma.listing.delete({ where: { listing_id: listingId } });
+    console.log(`Successfully deleted listing: ${listing.listing_id}`);
+    
+    res.json({ 
+      message: 'Listing deleted successfully.',
+      deletedListing: {
+        id: listing.listing_id,
+        brand: listing.brand,
+        model: listing.model,
+        user: listing.user.email
+      }
+    });
+  } catch (error) {
+    console.error('Error deleting listing:', error);
+    res.status(500).json({ error: 'Failed to delete listing.', details: error.message });
+  }
+});
+
 module.exports = router; 

@@ -95,6 +95,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteListing = async (listing_id) => {
+    if (!window.confirm('Are you sure you want to delete this listing? This action cannot be undone and will also delete all related loans, messages, and flags.')) return;
+    try {
+      await api.delete(`/api/admin/listings/${listing_id}`);
+      setSnackbar({ open: true, message: 'Listing deleted successfully', severity: 'success' });
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting listing:', error);
+      setSnackbar({ open: true, message: 'Failed to delete listing', severity: 'error' });
+    }
+  };
+
   // User management functions
   const handleDeleteUser = async (userId) => {
     console.log('Attempting to delete user:', userId);
@@ -587,6 +599,19 @@ export default function AdminDashboard() {
                             }}
                           >
                             <DeleteIcon fontSize="small" />
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="error"
+                            onClick={() => handleDeleteListing(flag.content_id)}
+                            sx={{ 
+                              textTransform: 'none',
+                              fontWeight: 600,
+                              borderRadius: '8px'
+                            }}
+                          >
+                            Delete Listing
                           </Button>
                         </Box>
                       </Box>
