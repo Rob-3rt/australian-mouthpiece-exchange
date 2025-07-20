@@ -771,3 +771,163 @@ exports.requestReturn = async (req, res) => {
     res.status(500).json({ error: 'Failed to request return.' });
   }
 }; 
+
+// Get all loan data for dashboard (incoming, outgoing, current, history)
+exports.getAllLoanData = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    
+    // Get all loan data in parallel
+    const [incoming, outgoing, current, history] = await Promise.all([
+      // Incoming requests (loans requested from this user)
+      prisma.loan.findMany({
+        where: {
+          listing: { user_id: userId },
+          status: 'pending'
+        },
+        include: {
+          borrower: {
+            select: {
+              user_id: true,
+              name: true,
+              nickname: true,
+              average_rating: true,
+              rating_count: true
+            }
+          },
+          listing: {
+            select: {
+              listing_id: true,
+              instrument_type: true,
+              brand: true,
+              model: true,
+              photos: true
+            }
+          }
+        },
+        orderBy: { created_at: 'desc' }
+      }),
+      
+      // Outgoing requests (loans requested by this user)
+      prisma.loan.findMany({
+        where: {
+          borrower_id: userId,
+          status: 'pending'
+        },
+        include: {
+          lender: {
+            select: {
+              user_id: true,
+              name: true,
+              nickname: true,
+              average_rating: true,
+              rating_count: true
+            }
+          },
+          listing: {
+            select: {
+              listing_id: true,
+              instrument_type: true,
+              brand: true,
+              model: true,
+              photos: true
+            }
+          }
+        },
+        orderBy: { created_at: 'desc' }
+      }),
+      
+      // Current active loans
+      prisma.loan.findMany({
+        where: {
+          OR: [
+            { borrower_id: userId },
+            { listing: { user_id: userId } }
+          ],
+          status: { in: ['active', 'on loan'] }
+        },
+        include: {
+          borrower: {
+            select: {
+              user_id: true,
+              name: true,
+              nickname: true,
+              average_rating: true,
+              rating_count: true
+            }
+          },
+          lender: {
+            select: {
+              user_id: true,
+              name: true,
+              nickname: true,
+              average_rating: true,
+              rating_count: true
+            }
+          },
+          listing: {
+            select: {
+              listing_id: true,
+              instrument_type: true,
+              brand: true,
+              model: true,
+              photos: true
+            }
+          }
+        },
+        orderBy: { start_date: 'desc' }
+      }),
+      
+      // Loan history
+      prisma.loan.findMany({
+        where: {
+          OR: [
+            { borrower_id: userId },
+            { listing: { user_id: userId } }
+          ],
+          status: { in: ['returned', 'cancelled', 'overdue'] }
+        },
+        include: {
+          borrower: {
+            select: {
+              user_id: true,
+              name: true,
+              nickname: true,
+              average_rating: true,
+              rating_count: true
+            }
+          },
+          lender: {
+            select: {
+              user_id: true,
+              name: true,
+              nickname: true,
+              average_rating: true,
+              rating_count: true
+            }
+          },
+          listing: {
+            select: {
+              listing_id: true,
+              instrument_type: true,
+              brand: true,
+              model: true,
+              photos: true
+            }
+          }
+        },
+        orderBy: { updated_at: 'desc' }
+      })
+    ]);
+
+    res.json({
+      incoming,
+      outgoing,
+      current,
+      history
+    });
+  } catch (err) {
+    console.error('Error fetching all loan data:', err);
+    res.status(500).json({ error: 'Failed to fetch loan data.' });
+  }
+}; 

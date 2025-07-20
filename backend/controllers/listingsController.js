@@ -105,8 +105,8 @@ const validateListingFields = (data) => {
   // Brand validation
   if (!data.brand || typeof data.brand !== 'string') {
     errors.push('Brand is required and must be a string.');
-  } else if (!ALLOWED_BRANDS.includes(data.brand)) {
-    errors.push(`Invalid brand. Must be one of: ${ALLOWED_BRANDS.join(', ')}`);
+  } else if (data.brand.length > 100) {
+    errors.push('Brand must be 100 characters or less.');
   }
 
   // Model validation

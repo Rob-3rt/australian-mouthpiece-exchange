@@ -14,7 +14,8 @@ const {
   getIncomingRequests,
   getOutgoingRequests,
   getCurrentLoans,
-  getLoanHistory
+  getLoanHistory,
+  getAllLoanData
 } = require('../controllers/loanController');
 
 // Apply auth middleware to all loan routes
@@ -25,6 +26,9 @@ router.get('/', getUserLoans);
 
 // Get loan statistics
 router.get('/stats', getLoanStats);
+
+// Get all loan data for dashboard in a single request
+router.get('/dashboard', getAllLoanData);
 
 // New endpoints for dashboard sections (must be before /:id)
 router.get('/incoming', getIncomingRequests);
