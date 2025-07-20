@@ -1,5 +1,6 @@
 const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
+const mime = require('mime-types');
 
 const PAYPAL_ME_REGEX = /^(https?:\/\/)?(www\.)?paypal\.me\/[\w\-]+(\/?.*)?$/i;
 const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -11,6 +12,61 @@ function isDisposableEmail(email) {
   const domain = email.split('@')[1]?.toLowerCase();
   return DISPOSABLE_DOMAINS.includes(domain);
 }
+
+// File validation function
+const validateImageData = (photos) => {
+  if (!Array.isArray(photos)) {
+    return { valid: false, error: 'Photos must be an array.' };
+  }
+
+  const allowedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png', 
+    'image/gif',
+    'image/webp'
+  ];
+
+  const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+
+  for (let i = 0; i < photos.length; i++) {
+    const photo = photos[i];
+    
+    // Check if it's a base64 data URL
+    if (typeof photo === 'string' && photo.startsWith('data:')) {
+      const matches = photo.match(/^data:([^;]+);base64,(.+)$/);
+      if (!matches) {
+        return { valid: false, error: `Photo ${i + 1}: Invalid data URL format.` };
+      }
+      
+      const mimeType = matches[1];
+      const base64Data = matches[2];
+      
+      // Validate MIME type
+      if (!allowedTypes.includes(mimeType)) {
+        return { valid: false, error: `Photo ${i + 1}: Invalid file type. Only PNG, JPG, JPEG, GIF, and WebP are allowed.` };
+      }
+      
+      // Check file size (base64 is ~33% larger than binary)
+      const sizeInBytes = Math.ceil((base64Data.length * 3) / 4);
+      if (sizeInBytes > maxSize) {
+        return { valid: false, error: `Photo ${i + 1}: File too large. Maximum size is 5MB.` };
+      }
+      
+      // Additional validation: check for common malicious patterns
+      if (base64Data.includes('<?php') || base64Data.includes('<script') || base64Data.includes('javascript:')) {
+        return { valid: false, error: `Photo ${i + 1}: File contains potentially malicious content.` };
+      }
+    } else if (typeof photo === 'string' && photo.startsWith('http')) {
+      // Allow existing URLs (for editing)
+      continue;
+    } else {
+      return { valid: false, error: `Photo ${i + 1}: Invalid photo format.` };
+    }
+  }
+  
+  return { valid: true };
+};
 
 // Get all listings (with optional filters in query)
 exports.getAllListings = async (req, res) => {
@@ -182,6 +238,10 @@ exports.createListing = async (req, res) => {
         return res.status(400).json({ error: 'PayPal link must be a valid PayPal.Me URL or email address.' });
       }
     }
+    const validationResult = validateImageData(photos);
+    if (!validationResult.valid) {
+      return res.status(400).json({ error: validationResult.error });
+    }
     const listing = await prisma.listing.create({
       data: {
         user_id: req.user.userId,
@@ -283,6 +343,10 @@ exports.updateListing = async (req, res) => {
       } else {
         return res.status(400).json({ error: 'PayPal link must be a valid PayPal.Me URL or email address.' });
       }
+    }
+    const validationResult = validateImageData(photos);
+    if (!validationResult.valid) {
+      return res.status(400).json({ error: validationResult.error });
     }
     try {
       const updated = await prisma.listing.update({

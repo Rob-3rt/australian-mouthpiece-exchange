@@ -62,7 +62,15 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
 
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
-    await processFiles(files);
+    const validFiles = validateImageFiles(files);
+    if (validFiles.length !== files.length) {
+      setSnackbar({ 
+        open: true, 
+        message: 'Some files were rejected. Only PNG, JPG, JPEG, GIF, and WebP images are allowed.', 
+        severity: 'error' 
+      });
+    }
+    await processFiles(validFiles);
   };
 
   const processFiles = async (files) => {
@@ -71,6 +79,48 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
       file
     })));
     setSelectedImages(prev => [...prev, ...previews].slice(0, 6)); // max 6 images
+  };
+
+  const validateImageFiles = (files) => {
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/gif',
+      'image/webp'
+    ];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    return files.filter(file => {
+      // Check file type
+      if (!allowedTypes.includes(file.type)) {
+        console.warn(`Rejected file ${file.name}: Invalid file type ${file.type}`);
+        return false;
+      }
+      
+      // Check file size
+      if (file.size > maxSize) {
+        console.warn(`Rejected file ${file.name}: File too large (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+        return false;
+      }
+
+      // Additional validation: check file extension matches MIME type
+      const extension = file.name.split('.').pop().toLowerCase();
+      const expectedExtensions = {
+        'image/jpeg': ['jpg', 'jpeg'],
+        'image/jpg': ['jpg', 'jpeg'],
+        'image/png': ['png'],
+        'image/gif': ['gif'],
+        'image/webp': ['webp']
+      };
+      
+      if (!expectedExtensions[file.type]?.includes(extension)) {
+        console.warn(`Rejected file ${file.name}: Extension doesn't match MIME type`);
+        return false;
+      }
+
+      return true;
+    });
   };
 
   const handleDragOver = (e) => {
@@ -86,8 +136,16 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
   const handleDrop = async (e) => {
     e.preventDefault();
     setIsDragOver(false);
-    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-    await processFiles(files);
+    const files = Array.from(e.dataTransfer.files);
+    const validFiles = validateImageFiles(files);
+    if (validFiles.length !== files.length) {
+      setSnackbar({ 
+        open: true, 
+        message: 'Some files were rejected. Only PNG, JPG, JPEG, GIF, and WebP images are allowed.', 
+        severity: 'error' 
+      });
+    }
+    await processFiles(validFiles);
   };
   const handleRemoveImage = (idx) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== idx));
@@ -362,7 +420,7 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
                 id="file-input"
                 type="file"
                 multiple
-                accept="image/*"
+                accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/jpg,image/png,image/gif,image/webp"
                 onChange={handleImageChange}
                 style={{ display: 'none' }}
               />
@@ -375,7 +433,7 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
                   Drag and drop images here, or click to browse
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#717171', mt: 1 }}>
-                  PNG, JPG, JPEG up to 5MB each
+                  PNG, JPG, JPEG, GIF, WebP up to 5MB each
                 </Typography>
               </Box>
             </Box>
