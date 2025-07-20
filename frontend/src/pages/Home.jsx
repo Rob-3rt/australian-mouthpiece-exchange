@@ -113,20 +113,25 @@ export default function Home() {
               objectFit: 'cover',
               display: 'block',
             }}
+            loading="lazy"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
           />
-        ) : (
-          <Box sx={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#717171',
-            fontSize: '12px'
-          }}>
-            No Image
-          </Box>
-        )}
+        ) : null}
+        <Box sx={{
+          width: '100%',
+          height: '100%',
+          display: listing.photos && listing.photos.length > 0 ? 'none' : 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#717171',
+          fontSize: '12px',
+          backgroundColor: '#f7f7f7'
+        }}>
+          No Image
+        </Box>
       </Box>
       
       {/* Content */}

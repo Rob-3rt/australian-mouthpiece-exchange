@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const mime = require('mime-types');
+const ImageOptimizer = require('../utils/imageOptimizer');
 
 const PAYPAL_ME_REGEX = /^(https?:\/\/)?(www\.)?paypal\.me\/[\w\-]+(\/?.*)?$/i;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -223,14 +224,12 @@ exports.getAllListings = async (req, res) => {
     if (price_min || price_max) filters.price = {};
     if (price_min) filters.price.gte = parseFloat(price_min);
     if (price_max) filters.price.lte = parseFloat(price_max);
-    // Only log errors or key actions, not full request/response or user objects
+    
     // Add user_id filter
     if (user_id === 'me' && req.user && req.user.userId) {
       filters.user_id = req.user.userId;
-      // Don't filter by status for "my listings" - show all statuses
     } else if (user_id && !isNaN(Number(user_id))) {
       filters.user_id = Number(user_id);
-      // Don't filter by status for specific user listings - show all statuses
     } else {
       // Only show active listings for public browsing
       filters.status = 'active';
@@ -238,13 +237,13 @@ exports.getAllListings = async (req, res) => {
     
     // Get available models, brands, and instrument types for autocomplete (excluding the current filters)
     const modelFilters = { ...filters };
-    delete modelFilters.model; // Remove model filter to get all available models
-    delete modelFilters.brand; // Remove brand filter to get all available brands
-    delete modelFilters.instrument_type; // Remove instrument filter to get all available instruments
-    // For autocomplete, only show models, brands, and instruments from active listings
+    delete modelFilters.model;
+    delete modelFilters.brand;
+    delete modelFilters.instrument_type;
     if (!user_id || user_id === 'me') {
       modelFilters.status = 'active';
     }
+    
     const availableModels = await prisma.listing.findMany({
       where: modelFilters,
       select: { model: true },
@@ -268,13 +267,37 @@ exports.getAllListings = async (req, res) => {
     
     // Add pagination support
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 24; // Default 24 listings per page
+    const limit = parseInt(req.query.limit) || 24;
     const skip = (page - 1) * limit;
     
     const listings = await prisma.listing.findMany({
       where: filters,
-      include: {
-        user: { select: { user_id: true, name: true, nickname: true, average_rating: true, rating_count: true, location_state: true, location_postcode: true, paypal_link: true } }
+      select: {
+        listing_id: true,
+        instrument_type: true,
+        brand: true,
+        model: true,
+        condition: true,
+        price: true,
+        description: true,
+        photos: true,
+        open_to_swap: true,
+        open_to_loan: true,
+        status: true,
+        created_at: true,
+        paypal_link_override: true,
+        user: {
+          select: {
+            user_id: true,
+            name: true,
+            nickname: true,
+            average_rating: true,
+            rating_count: true,
+            location_state: true,
+            location_postcode: true,
+            paypal_link: true
+          }
+        }
       },
       orderBy: { created_at: 'desc' },
       take: limit,
@@ -283,15 +306,24 @@ exports.getAllListings = async (req, res) => {
     
     // Get total count for pagination
     const totalCount = await prisma.listing.count({ where: filters });
-    // Add effective PayPal link to each listing
-    const listingsWithPaypal = listings.map(listing => ({
+    
+    // Optimize listings data - only send first photo and truncate description
+    const optimizedListings = listings.map(listing => ({
       ...listing,
+      photos: listing.photos && listing.photos.length > 0 ? [listing.photos[0]] : [], // Only first photo
+      description: listing.description ? listing.description.substring(0, 150) + (listing.description.length > 150 ? '...' : '') : '',
       paypal_link_effective: listing.paypal_link_override || listing.user.paypal_link || null
     }));
     
-    // Return both listings and available models/brands/instruments with pagination info
+    // Set cache headers for better performance
+    res.set({
+      'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
+      'ETag': `"${Date.now()}-${totalCount}"` // Simple ETag for caching
+    });
+    
+    // Return optimized data
     res.json({
-      listings: listingsWithPaypal,
+      listings: optimizedListings,
       availableModels: availableModels.map(item => item.model),
       availableBrands: availableBrands.map(item => item.brand),
       availableInstrumentTypes: availableInstrumentTypes.map(item => item.instrument_type),
@@ -368,6 +400,20 @@ exports.createListing = async (req, res) => {
     if (!validationResult.valid) {
       return res.status(400).json({ error: validationResult.error });
     }
+    
+    // Optimize images before storing
+    let optimizedPhotos = [];
+    if (photos && photos.length > 0) {
+      optimizedPhotos = await Promise.all(
+        photos.map(async (photo) => {
+          if (photo.startsWith('data:')) {
+            return await ImageOptimizer.optimizeImage(photo, 85);
+          }
+          return photo; // Keep existing URLs as-is
+        })
+      );
+    }
+    
     const listing = await prisma.listing.create({
       data: {
         user_id: req.user.userId,
@@ -377,7 +423,7 @@ exports.createListing = async (req, res) => {
         condition,
         price: parseFloat(price),
         description,
-        photos: photos || [],
+        photos: optimizedPhotos || [],
         open_to_swap: openToSwapBool,
         open_to_loan: openToLoanBool,
         status: 'active',
@@ -401,11 +447,19 @@ exports.getListing = async (req, res) => {
       }
     });
     if (!listing) return res.status(404).json({ error: 'Listing not found.' });
+    
     // Add effective PayPal link
     const listingWithPaypal = {
       ...listing,
       paypal_link_effective: listing.paypal_link_override || listing.user.paypal_link || null
     };
+    
+    // Set cache headers for better performance
+    res.set({
+      'Cache-Control': 'public, max-age=600', // Cache for 10 minutes
+      'ETag': `"${listing.listing_id}-${listing.updated_at.getTime()}"` // ETag based on listing ID and update time
+    });
+    
     res.json(listingWithPaypal);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch listing.' });
@@ -473,6 +527,20 @@ exports.updateListing = async (req, res) => {
     if (!validationResult.valid) {
       return res.status(400).json({ error: validationResult.error });
     }
+    
+    // Optimize images before storing
+    let optimizedPhotos = [];
+    if (photos && photos.length > 0) {
+      optimizedPhotos = await Promise.all(
+        photos.map(async (photo) => {
+          if (photo.startsWith('data:')) {
+            return await ImageOptimizer.optimizeImage(photo, 85);
+          }
+          return photo; // Keep existing URLs as-is
+        })
+      );
+    }
+    
     try {
       const updated = await prisma.listing.update({
         where: { listing_id: listing.listing_id },
@@ -483,7 +551,7 @@ exports.updateListing = async (req, res) => {
           condition,
           price: price ? parseFloat(price) : undefined,
           description,
-          photos: photos || [],
+          photos: optimizedPhotos || [],
           open_to_swap: openToSwapBool,
           open_to_loan: openToLoanBool,
           status,
