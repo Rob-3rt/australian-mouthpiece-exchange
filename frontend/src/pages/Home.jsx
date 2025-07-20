@@ -16,7 +16,7 @@ export default function Home() {
   const [filters, setFilters] = useState({});
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, totalCount: 0 });
-  const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const debounceTimeout = useRef();
   const navigate = useNavigate();
 
