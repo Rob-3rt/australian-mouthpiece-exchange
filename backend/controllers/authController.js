@@ -6,6 +6,82 @@ const nodemailer = require('nodemailer');
 
 const prisma = new PrismaClient();
 
+// Allowed values for validation
+const ALLOWED_STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
+
+// Registration validation function
+const validateRegistrationFields = (data) => {
+  const errors = [];
+
+  // Email validation
+  if (!data.email || typeof data.email !== 'string') {
+    errors.push('Email is required and must be a string.');
+  } else {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      errors.push('Email must be a valid email address.');
+    }
+    if (data.email.length > 255) {
+      errors.push('Email must be 255 characters or less.');
+    }
+  }
+
+  // Password validation
+  if (!data.password || typeof data.password !== 'string') {
+    errors.push('Password is required and must be a string.');
+  } else if (data.password.length < 8) {
+    errors.push('Password must be at least 8 characters long.');
+  } else if (data.password.length > 128) {
+    errors.push('Password must be 128 characters or less.');
+  }
+
+  // First name validation
+  if (!data.first_name || typeof data.first_name !== 'string') {
+    errors.push('First name is required and must be a string.');
+  } else if (data.first_name.trim().length < 1) {
+    errors.push('First name cannot be empty.');
+  } else if (data.first_name.length > 50) {
+    errors.push('First name must be 50 characters or less.');
+  }
+
+  // Last name validation
+  if (!data.last_name || typeof data.last_name !== 'string') {
+    errors.push('Last name is required and must be a string.');
+  } else if (data.last_name.trim().length < 1) {
+    errors.push('Last name cannot be empty.');
+  } else if (data.last_name.length > 50) {
+    errors.push('Last name must be 50 characters or less.');
+  }
+
+  // Location state validation
+  if (!data.location_state || typeof data.location_state !== 'string') {
+    errors.push('Location state is required and must be a string.');
+  } else if (!ALLOWED_STATES.includes(data.location_state)) {
+    errors.push(`Invalid state. Must be one of: ${ALLOWED_STATES.join(', ')}`);
+  }
+
+  // Location postcode validation
+  if (!data.location_postcode || typeof data.location_postcode !== 'string') {
+    errors.push('Location postcode is required and must be a string.');
+  } else if (!/^\d{4}$/.test(data.location_postcode)) {
+    errors.push('Postcode must be exactly 4 digits.');
+  }
+
+  // Nickname validation (optional)
+  if (data.nickname !== undefined && data.nickname !== null) {
+    if (typeof data.nickname !== 'string') {
+      errors.push('Nickname must be a string.');
+    } else if (data.nickname.trim().length > 50) {
+      errors.push('Nickname must be 50 characters or less.');
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors: errors
+  };
+};
+
 // Helper: send verification email
 async function sendVerificationEmail(user, req) {
   const token = jwt.sign({ userId: user.user_id }, config.jwtSecret, { expiresIn: '1d' });
@@ -65,22 +141,20 @@ async function sendVerificationEmail(user, req) {
 // Register a new user
 exports.register = async (req, res) => {
   try {
+    // Comprehensive field validation
+    const fieldValidation = validateRegistrationFields(req.body);
+    if (!fieldValidation.valid) {
+      console.error('Registration validation failed:', fieldValidation.errors);
+      return res.status(400).json({ 
+        error: 'Validation failed.', 
+        details: fieldValidation.errors 
+      });
+    }
+
     const { email, password, first_name, last_name, location_state, location_postcode, nickname } = req.body;
     
     // Registration attempt for email (do not log full user object)
     console.log('Registration attempt for email:', email);
-    
-    if (!email || !password || !first_name || !last_name || !location_state || !location_postcode) {
-      console.log('Missing fields:', { 
-        email: !!email, 
-        password: !!password, 
-        first_name: !!first_name, 
-        last_name: !!last_name, 
-        location_state: !!location_state, 
-        location_postcode: !!location_postcode 
-      });
-      return res.status(400).json({ error: 'Missing required fields.' });
-    }
     
     // Combine first and last name
     const name = `${first_name} ${last_name}`.trim();
@@ -123,8 +197,19 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Missing email or password.' });
+    
+    // Basic validation for login
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'Email is required and must be a string.' });
+    }
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Password is required and must be a string.' });
+    }
+    
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Email must be a valid email address.' });
     }
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {

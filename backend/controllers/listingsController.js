@@ -1,9 +1,32 @@
-const { PrismaClient } = require('../generated/prisma');
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const mime = require('mime-types');
 
 const PAYPAL_ME_REGEX = /^(https?:\/\/)?(www\.)?paypal\.me\/[\w\-]+(\/?.*)?$/i;
-const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Allowed values for validation
+const ALLOWED_INSTRUMENT_TYPES = [
+  'Trumpet', 'Piccolo Trumpet', 'Flugelhorn', 'Cornet', 'Tenor Trombone', 'Bass Trombone', 
+  'Alto Trombone', 'Contrabass Trombone', 'French Horn', 'Tuba', 'Sousaphone', 'Euphonium', 
+  'Baritone Horn', 'Wagner Tuba', 'Ophicleide', 'Alto Horn', 'Mellophone'
+];
+
+const ALLOWED_BRANDS = [
+  'ACB (Austin Custom Brass)', 'Alliance', 'AR Resonance', 'Bach (Vincent Bach)', 'Best Brass', 
+  'Blessing (E.K. Blessing)', 'Breslmair', 'Bruno Tilz', 'Curry', 'Coppergate', 'Denis Wick', 
+  'Donat', 'Frate', 'Frost', 'Giddings & Webster', 'Giardinelli', 'Greg Black', 'GR', 
+  'G.W. Mouthpieces', 'Hammond Design', 'Helix Brass', 'Holton (Holton-Farkas)', 'JC Custom', 
+  'Josef Klier', 'King', 'K&G', 'La Tromba', 'Laskey', 'Legends Brass', 'Lotus', 'Marcinkiewicz', 
+  'Meeuwsen', 'Monette', 'O\'Malley', 'Parduba', 'Patrick', 'Pickett', 'Purviance', 'Reeves', 
+  'Robert Tucci (formerly Perantucci)', 'Rudy Mück', 'Schilke', 'Shires', 'Stork', 'Stomvi', 
+  'Toshi', 'Vennture', 'Warburton', 'Wedge', 'Yamaha'
+];
+
+const ALLOWED_CONDITIONS = ['New', 'Like New', 'Excellent', 'Very Good', 'Good', 'Fair', 'Poor'];
+
+const ALLOWED_STATUSES = ['active', 'paused', 'sold', 'deleted', 'loaned'];
+
 const DISPOSABLE_DOMAINS = [
   'mailinator.com', 'guerrillamail.com', '10minutemail.com', 'tempmail.com', 'yopmail.com', 'trashmail.com', 'fakeinbox.com', 'getnada.com', 'dispostable.com', 'maildrop.cc', 'mintemail.com', 'mytemp.email', 'throwawaymail.com', 'mailnesia.com', 'spamgourmet.com', 'sharklasers.com', 'spam4.me', 'mailcatch.com', 'inboxbear.com', 'spambog.com', 'spambox.us', 'temp-mail.org', 'temp-mail.ru', 'tempmail.net', 'tempmailo.com', 'emailondeck.com', 'moakt.com', 'anonbox.net', 'mail-temp.com', 'tempail.com', 'emailtemporario.com.br', 'mail7.io', 'disposablemail.com', 'dropmail.me', 'easytrashmail.com', 'eyepaste.com', 'fakemailgenerator.com', 'mailcatch.com', 'maildrop.cc', 'mailnesia.com', 'mailnull.com', 'meltmail.com', 'nowmymail.com', 'objectmail.com', 'onewaymail.com', 'proxymail.eu', 'sharklasers.com', 'spamavert.com', 'spamfree24.com', 'spamslicer.com', 'spamspot.com', 'tempemail.net', 'tempinbox.com', 'trashmail.com', 'yopmail.com'
 ];
@@ -66,6 +89,111 @@ const validateImageData = (photos) => {
   }
   
   return { valid: true };
+};
+
+// Comprehensive field validation function
+const validateListingFields = (data) => {
+  const errors = [];
+
+  // Instrument type validation
+  if (!data.instrument_type || typeof data.instrument_type !== 'string') {
+    errors.push('Instrument type is required and must be a string.');
+  } else if (!ALLOWED_INSTRUMENT_TYPES.includes(data.instrument_type)) {
+    errors.push(`Invalid instrument type. Must be one of: ${ALLOWED_INSTRUMENT_TYPES.join(', ')}`);
+  }
+
+  // Brand validation
+  if (!data.brand || typeof data.brand !== 'string') {
+    errors.push('Brand is required and must be a string.');
+  } else if (!ALLOWED_BRANDS.includes(data.brand)) {
+    errors.push(`Invalid brand. Must be one of: ${ALLOWED_BRANDS.join(', ')}`);
+  }
+
+  // Model validation
+  if (!data.model || typeof data.model !== 'string') {
+    errors.push('Model is required and must be a string.');
+  } else if (data.model.trim().length < 1) {
+    errors.push('Model cannot be empty.');
+  } else if (data.model.length > 100) {
+    errors.push('Model must be 100 characters or less.');
+  }
+
+  // Condition validation
+  if (!data.condition || typeof data.condition !== 'string') {
+    errors.push('Condition is required and must be a string.');
+  } else if (!ALLOWED_CONDITIONS.includes(data.condition)) {
+    errors.push(`Invalid condition. Must be one of: ${ALLOWED_CONDITIONS.join(', ')}`);
+  }
+
+  // Price validation
+  if (data.price === undefined || data.price === null || data.price === '') {
+    errors.push('Price is required.');
+  } else {
+    const price = parseFloat(data.price);
+    if (isNaN(price)) {
+      errors.push('Price must be a valid number.');
+    } else if (price <= 0) {
+      errors.push('Price must be greater than 0.');
+    } else if (price > 100000) {
+      errors.push('Price cannot exceed $100,000.');
+    }
+  }
+
+  // Description validation
+  if (!data.description || typeof data.description !== 'string') {
+    errors.push('Description is required and must be a string.');
+  } else if (data.description.trim().length < 10) {
+    errors.push('Description must be at least 10 characters long.');
+  } else if (data.description.length > 2000) {
+    errors.push('Description must be 2000 characters or less.');
+  }
+
+  // Boolean field validation
+  if (data.open_to_swap !== undefined && data.open_to_swap !== null) {
+    if (typeof data.open_to_swap !== 'boolean' && typeof data.open_to_swap !== 'string') {
+      errors.push('open_to_swap must be a boolean or string.');
+    }
+  }
+
+  if (data.open_to_loan !== undefined && data.open_to_loan !== null) {
+    if (typeof data.open_to_loan !== 'boolean' && typeof data.open_to_loan !== 'string') {
+      errors.push('open_to_loan must be a boolean or string.');
+    }
+  }
+
+  // PayPal link validation (if provided)
+  if (data.paypal_link_override !== undefined && data.paypal_link_override !== null && data.paypal_link_override !== '') {
+    if (typeof data.paypal_link_override !== 'string') {
+      errors.push('PayPal link must be a string.');
+    } else if (!PAYPAL_ME_REGEX.test(data.paypal_link_override) && !EMAIL_REGEX.test(data.paypal_link_override)) {
+      errors.push('PayPal link must be a valid PayPal.Me URL or email address.');
+    } else if (EMAIL_REGEX.test(data.paypal_link_override) && isDisposableEmail(data.paypal_link_override)) {
+      errors.push('Disposable email addresses are not allowed for PayPal.');
+    }
+  }
+
+  // Status validation (for updates)
+  if (data.status !== undefined && data.status !== null) {
+    if (typeof data.status !== 'string') {
+      errors.push('Status must be a string.');
+    } else if (!ALLOWED_STATUSES.includes(data.status)) {
+      errors.push(`Invalid status. Must be one of: ${ALLOWED_STATUSES.join(', ')}`);
+    }
+  }
+
+  // Photos validation
+  if (data.photos !== undefined && data.photos !== null) {
+    if (!Array.isArray(data.photos)) {
+      errors.push('Photos must be an array.');
+    } else if (data.photos.length > 6) {
+      errors.push('Maximum 6 photos allowed.');
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors: errors
+  };
 };
 
 // Get all listings (with optional filters in query)
@@ -190,19 +318,17 @@ exports.createListing = async (req, res) => {
     photos: req.body.photos ? `[${Array.isArray(req.body.photos) ? req.body.photos.length : 'not array'}]` : undefined
   });
   try {
-    // Debug log incoming data (exclude photos/images)
-    const { instrument_type, brand, model, condition, price, description, open_to_swap, open_to_loan, paypal_link_override, photos } = req.body;
-    const missingFields = [];
-    if (!instrument_type) missingFields.push('instrument_type');
-    if (!brand) missingFields.push('brand');
-    if (!model) missingFields.push('model');
-    if (!condition) missingFields.push('condition');
-    if (!price) missingFields.push('price');
-    if (!description) missingFields.push('description');
-    if (missingFields.length > 0) {
-      console.error('Missing required fields:', missingFields);
-      return res.status(400).json({ error: 'Missing required fields.', missingFields });
+    // Comprehensive field validation
+    const fieldValidation = validateListingFields(req.body);
+    if (!fieldValidation.valid) {
+      console.error('Field validation failed:', fieldValidation.errors);
+      return res.status(400).json({ 
+        error: 'Validation failed.', 
+        details: fieldValidation.errors 
+      });
     }
+
+    const { instrument_type, brand, model, condition, price, description, open_to_swap, open_to_loan, paypal_link_override, photos } = req.body;
     // Fix boolean conversion for open_to_swap
     let openToSwapBool = false;
     if (typeof open_to_swap === 'string') {
@@ -294,19 +420,18 @@ exports.updateListing = async (req, res) => {
       ...req.body,
       photos: req.body.photos ? `[${Array.isArray(req.body.photos) ? req.body.photos.length : 'not array'}]` : undefined
     });
-    const { instrument_type, brand, model, condition, price, description, photos, open_to_swap, open_to_loan, status, paypal_link_override } = req.body;
-    // Validate required fields
-    const missingFields = [];
-    if (!instrument_type) missingFields.push('instrument_type');
-    if (!brand) missingFields.push('brand');
-    if (!model) missingFields.push('model');
-    if (!condition) missingFields.push('condition');
-    if (!price) missingFields.push('price');
-    if (!description) missingFields.push('description');
-    if (missingFields.length > 0) {
-      console.error('Missing required fields:', missingFields);
-      return res.status(400).json({ error: 'Missing required fields.', missingFields });
+    
+    // Comprehensive field validation
+    const fieldValidation = validateListingFields(req.body);
+    if (!fieldValidation.valid) {
+      console.error('Field validation failed:', fieldValidation.errors);
+      return res.status(400).json({ 
+        error: 'Validation failed.', 
+        details: fieldValidation.errors 
+      });
     }
+
+    const { instrument_type, brand, model, condition, price, description, photos, open_to_swap, open_to_loan, status, paypal_link_override } = req.body;
     // Fix boolean conversion for open_to_swap
     let openToSwapBool = false;
     if (typeof open_to_swap === 'string') {
