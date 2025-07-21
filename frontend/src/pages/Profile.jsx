@@ -32,7 +32,7 @@ const INSTRUMENT_TYPES = [
   'Baritone Horn',
   'Wagner Tuba',
   'Ophicleide',
-  'Alto Horn',
+  'Tenor Horn',
   'Mellophone'
 ];
 
