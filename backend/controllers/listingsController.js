@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const mime = require('mime-types');
 const ImageOptimizer = require('../utils/imageOptimizer');
+const sharp = require('sharp');
 
 const PAYPAL_ME_REGEX = /^(https?:\/\/)?(www\.)?paypal\.me\/[\w\-]+(\/?.*)?$/i;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -80,6 +81,14 @@ const validateImageData = (photos) => {
       // Additional validation: check for common malicious patterns
       if (base64Data.includes('<?php') || base64Data.includes('<script') || base64Data.includes('javascript:')) {
         return { valid: false, error: `Photo ${i + 1}: File contains potentially malicious content.` };
+      }
+
+      // Try to process with sharp to ensure it's a real image
+      try {
+        const buffer = Buffer.from(base64Data, 'base64');
+        sharp(buffer).metadata(); // Will throw if not a valid image
+      } catch (err) {
+        return { valid: false, error: `Photo ${i + 1}: File is not a valid image.` };
       }
     } else if (typeof photo === 'string' && photo.startsWith('http')) {
       // Allow existing URLs (for editing)
