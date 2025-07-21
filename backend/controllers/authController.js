@@ -197,7 +197,6 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
     // Basic validation for login
     if (!email || typeof email !== 'string') {
       return res.status(400).json({ error: 'Email is required and must be a string.' });
@@ -205,23 +204,28 @@ exports.login = async (req, res) => {
     if (!password || typeof password !== 'string') {
       return res.status(400).json({ error: 'Password is required and must be a string.' });
     }
-    
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: 'Email must be a valid email address.' });
     }
     const user = await prisma.user.findUnique({ where: { email } });
+    // Always use the same error for invalid credentials or unverified email
+    const invalidMsg = { error: 'Invalid credentials.' };
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials.' });
+      // Delay to mitigate timing attacks
+      await new Promise(r => setTimeout(r, 500));
+      return res.status(401).json(invalidMsg);
     }
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
-      return res.status(401).json({ error: 'Invalid credentials.' });
+      await new Promise(r => setTimeout(r, 500));
+      return res.status(401).json(invalidMsg);
     }
     // Check if email is verified
     if (!user.email_verified) {
-      return res.status(403).json({ error: 'Please verify your email before logging in. Check your inbox for a verification link.' });
+      await new Promise(r => setTimeout(r, 500));
+      return res.status(401).json(invalidMsg);
     }
     const token = jwt.sign({ userId: user.user_id }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
     res.json({ 
