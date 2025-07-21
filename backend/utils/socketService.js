@@ -46,20 +46,18 @@ function initializeSocket(server) {
   // Connection handler
   io.on('connection', (socket) => {
     if (socket.userId) {
-      console.log(`User ${socket.userId} connected`);
       // Add user to online users
       onlineUsers.set(socket.userId, socket.id);
     } else {
-      console.log('Unauthenticated user connected');
+      // Unauthenticated user connected
     }
 
     // Handle disconnect
     socket.on('disconnect', () => {
       if (socket.userId) {
-        console.log(`User ${socket.userId} disconnected`);
         onlineUsers.delete(socket.userId);
       } else {
-        console.log('Unauthenticated user disconnected');
+        // Unauthenticated user disconnected
       }
     });
 

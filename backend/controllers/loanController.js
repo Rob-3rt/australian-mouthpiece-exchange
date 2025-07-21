@@ -641,13 +641,9 @@ exports.getLoanStats = async (req, res) => {
 
 // New endpoints for dashboard sections
 exports.getIncomingRequests = async (req, res) => {
-  console.log('getIncomingRequests called');
-  console.log('req.user:', req.user);
-  console.log('req.headers:', req.headers);
   try {
     const userId = req.user && req.user.userId;
     if (!userId) {
-      console.log('No userId found in req.user');
       return res.status(401).json({ error: 'Not authenticated.' });
     }
     const loans = await prisma.loan.findMany({
@@ -662,13 +658,9 @@ exports.getIncomingRequests = async (req, res) => {
   }
 };
 exports.getOutgoingRequests = async (req, res) => {
-  console.log('getOutgoingRequests called');
-  console.log('req.user:', req.user);
-  console.log('req.headers:', req.headers);
   try {
     const userId = req.user && req.user.userId;
     if (!userId) {
-      console.log('No userId found in req.user');
       return res.status(401).json({ error: 'Not authenticated.' });
     }
     const loans = await prisma.loan.findMany({
@@ -683,13 +675,9 @@ exports.getOutgoingRequests = async (req, res) => {
   }
 };
 exports.getCurrentLoans = async (req, res) => {
-  console.log('getCurrentLoans called');
-  console.log('req.user:', req.user);
-  console.log('req.headers:', req.headers);
   try {
     const userId = req.user && req.user.userId;
     if (!userId) {
-      console.log('No userId found in req.user');
       return res.status(401).json({ error: 'Not authenticated.' });
     }
     const loans = await prisma.loan.findMany({
@@ -710,13 +698,9 @@ exports.getCurrentLoans = async (req, res) => {
   }
 };
 exports.getLoanHistory = async (req, res) => {
-  console.log('getLoanHistory called');
-  console.log('req.user:', req.user);
-  console.log('req.headers:', req.headers);
   try {
     const userId = req.user && req.user.userId;
     if (!userId) {
-      console.log('No userId found in req.user');
       return res.status(401).json({ error: 'Not authenticated.' });
     }
     const loans = await prisma.loan.findMany({

@@ -9,7 +9,6 @@ try {
     resend = new resend.Resend(config.resendApiKey);
   }
 } catch (error) {
-  console.log('Resend not installed, using nodemailer');
 }
 
 // Email transporter setup (fallback)
@@ -61,7 +60,6 @@ async function sendMessageNotification(recipient, sender, message, listing = nul
       });
     }
 
-    console.log(`Message notification email sent to ${recipient.email}`);
     return true;
   } catch (error) {
     console.error('Failed to send message notification email:', error);

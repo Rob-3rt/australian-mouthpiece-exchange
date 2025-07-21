@@ -359,11 +359,6 @@ exports.getAllListings = async (req, res) => {
 
 // Create a new listing
 exports.createListing = async (req, res) => {
-  console.log('DEBUG: POST /api/listings hit');
-  console.log('DEBUG: Incoming body (excluding photos):', {
-    ...req.body,
-    photos: req.body.photos ? `[${Array.isArray(req.body.photos) ? req.body.photos.length : 'not array'}]` : undefined
-  });
   try {
     // Enforce per-user active listing limit
     const activeCount = await prisma.listing.count({
@@ -491,11 +486,6 @@ exports.getListing = async (req, res) => {
 // Update a listing
 exports.updateListing = async (req, res) => {
   try {
-    console.log('DEBUG: PUT /api/listings/:id hit');
-    console.log('DEBUG: Incoming body (excluding photos):', {
-      ...req.body,
-      photos: req.body.photos ? `[${Array.isArray(req.body.photos) ? req.body.photos.length : 'not array'}]` : undefined
-    });
     
     // Comprehensive field validation
     const fieldValidation = validateListingFields(req.body);
@@ -615,20 +605,16 @@ exports.deleteListing = async (req, res) => {
 // Pause/unpause a listing
 exports.pauseListing = async (req, res) => {
   try {
-    console.log('Pause request for listing:', req.params.id);
     const listing = await prisma.listing.findUnique({ where: { listing_id: Number(req.params.id) } });
     if (!listing) return res.status(404).json({ error: 'Listing not found.' });
     if (listing.user_id !== req.user.userId) return res.status(403).json({ error: 'Not authorized.' });
     
-    console.log('Current listing status:', listing.status);
     const newStatus = listing.status === 'paused' ? 'active' : 'paused';
-    console.log('New status will be:', newStatus);
     
     const updated = await prisma.listing.update({
       where: { listing_id: listing.listing_id },
       data: { status: newStatus },
     });
-    console.log('Updated listing:', updated);
     res.json(updated);
   } catch (err) {
     console.error('Pause error:', err);
