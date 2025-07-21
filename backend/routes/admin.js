@@ -160,7 +160,6 @@ router.delete('/users/:id', async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const force = req.query.force === 'true';
-    console.log(`Attempting to delete user with ID: ${userId}`);
     
     // Don't allow admin to delete themselves
     if (userId === req.user.userId) {
@@ -194,17 +193,13 @@ router.delete('/users/:id', async (req, res) => {
       });
     }
 
-    console.log(`Deleting related data for user: ${userToDelete.email}`);
-
     // Delete all loans for the user's listings
     if (listingIds.length > 0) {
       const loansDeleted = await prisma.loan.deleteMany({ where: { listing_id: { in: listingIds } } });
-      console.log(`Deleted ${loansDeleted.count} loans for user's listings`);
     }
 
     // Delete user's listings
     const listingsDeleted = await prisma.listing.deleteMany({ where: { user_id: userId } });
-    console.log(`Deleted ${listingsDeleted.count} listings`);
     
     // Delete user's messages
     const messagesDeleted = await prisma.message.deleteMany({ 
@@ -215,69 +210,21 @@ router.delete('/users/:id', async (req, res) => {
         ]
       } 
     });
-    console.log(`Deleted ${messagesDeleted.count} messages`);
     
     // Delete user's ratings
     const ratingsFromDeleted = await prisma.peerRating.deleteMany({ where: { from_user_id: userId } });
     const ratingsToDeleted = await prisma.peerRating.deleteMany({ where: { to_user_id: userId } });
-    console.log(`Deleted ${ratingsFromDeleted.count + ratingsToDeleted.count} ratings`);
     
     // Delete user's flags
     const flagsDeleted = await prisma.flaggedContent.deleteMany({ where: { reporter_id: userId } });
-    console.log(`Deleted ${flagsDeleted.count} flagged content`);
     
     // Finally delete the user
     await prisma.user.delete({ where: { user_id: userId } });
-    console.log(`Successfully deleted user: ${userToDelete.email}`);
     
     res.json({ message: 'User deleted successfully.' });
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Failed to delete user.', details: error.message });
-  }
-});
-
-// Temporary endpoint to delete unverified users
-router.delete('/unverified-users', async (req, res) => {
-  try {
-    console.log('Deleting unverified users...');
-    
-    // First, let's see what unverified users exist
-    const unverifiedUsers = await prisma.user.findMany({
-      where: {
-        email_verified: false
-      },
-      select: {
-        user_id: true,
-        email: true,
-        name: true,
-        join_date: true
-      }
-    });
-    
-    console.log(`Found ${unverifiedUsers.length} unverified users to delete`);
-    
-    if (unverifiedUsers.length === 0) {
-      return res.json({ message: 'No unverified users found.' });
-    }
-    
-    // Delete all unverified users
-    const result = await prisma.user.deleteMany({
-      where: {
-        email_verified: false
-      }
-    });
-    
-    console.log(`Successfully deleted ${result.count} unverified users`);
-    
-    res.json({ 
-      message: `Successfully deleted ${result.count} unverified users.`,
-      deletedUsers: unverifiedUsers
-    });
-    
-  } catch (error) {
-    console.error('Error deleting unverified users:', error);
-    res.status(500).json({ error: 'Failed to delete unverified users.' });
   }
 });
 
@@ -343,7 +290,6 @@ router.post('/test-email', async (req, res) => {
 router.post('/users/:id/resend-verification', async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    console.log(`Attempting to resend verification email for user ID: ${userId}`);
     
     // Find the user
     const user = await prisma.user.findUnique({
@@ -437,7 +383,6 @@ router.post('/users/:id/resend-verification', async (req, res) => {
 router.delete('/listings/:id', async (req, res) => {
   try {
     const listingId = parseInt(req.params.id);
-    console.log(`Admin attempting to delete listing with ID: ${listingId}`);
     
     // Check if listing exists
     const listing = await prisma.listing.findUnique({
@@ -451,19 +396,15 @@ router.delete('/listings/:id', async (req, res) => {
       return res.status(404).json({ error: 'Listing not found.' });
     }
 
-    console.log(`Deleting listing: ${listing.listing_id} by user: ${listing.user.email}`);
-
     // Delete all related loans first
     const loansDeleted = await prisma.loan.deleteMany({ 
       where: { listing_id: listingId } 
     });
-    console.log(`Deleted ${loansDeleted.count} loans for listing`);
 
     // Delete all related messages
     const messagesDeleted = await prisma.message.deleteMany({ 
       where: { listing_id: listingId } 
     });
-    console.log(`Deleted ${messagesDeleted.count} messages for listing`);
 
     // Delete all related flags
     const flagsDeleted = await prisma.flaggedContent.deleteMany({ 
@@ -472,11 +413,9 @@ router.delete('/listings/:id', async (req, res) => {
         content_id: listingId 
       } 
     });
-    console.log(`Deleted ${flagsDeleted.count} flags for listing`);
 
     // Finally delete the listing
     await prisma.listing.delete({ where: { listing_id: listingId } });
-    console.log(`Successfully deleted listing: ${listing.listing_id}`);
     
     res.json({ 
       message: 'Listing deleted successfully.',
