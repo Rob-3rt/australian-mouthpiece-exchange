@@ -7,7 +7,6 @@ const LoanCard = ({ loan, user, onApprove, onRefuse, onReturn, onCancel, onSold,
   const isLender = (user?.userId ?? user?.user_id) === lender.user_id;
   const isBorrower = (user?.userId ?? user?.user_id) === borrower.user_id;
   const isActive = status === 'active' || status === 'on loan';
-  console.log('LoanCard:', { user, lender, isLender, status });
   const [messageOpen, setMessageOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [messageLoading, setMessageLoading] = useState(false);

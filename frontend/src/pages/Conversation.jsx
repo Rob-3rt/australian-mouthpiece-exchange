@@ -45,9 +45,7 @@ export default function Conversation() {
 
   const fetchMessages = async () => {
     try {
-      console.log('Fetching messages for userId:', userId, 'listingId:', listingId);
       const url = `/api/messages/conversation/${userId}${listingId ? `?listing_id=${listingId}` : ''}`;
-      console.log('API URL:', url);
       const response = await api.get(url);
       setMessages(response.data);
       
@@ -66,7 +64,7 @@ export default function Conversation() {
         refreshUnreadCount();
       }
     } catch (error) {
-      console.error('Failed to fetch messages:', error);
+      // Optionally handle error
     } finally {
       setLoading(false);
     }

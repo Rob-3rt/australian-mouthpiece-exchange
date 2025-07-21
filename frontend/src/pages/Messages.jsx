@@ -27,19 +27,17 @@ export default function Messages() {
   const fetchConversations = async () => {
     try {
       const response = await api.get('/api/messages');
-      console.log('Fetched conversations:', response.data);
       setConversations(response.data);
       // Refresh unread count in notification context
       refreshUnreadCount();
     } catch (error) {
-      console.error('Failed to fetch conversations:', error);
+      // Optionally handle error
     } finally {
       setLoading(false);
     }
   };
 
   const handleConversationClick = (userId, listingId) => {
-    console.log('Clicking conversation:', { userId, listingId });
     navigate(`/messages/${userId}${listingId ? `?listing=${listingId}` : ''}`);
   };
 

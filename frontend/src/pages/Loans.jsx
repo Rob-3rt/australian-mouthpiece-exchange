@@ -24,18 +24,11 @@ export default function Loans() {
     setError('');
     try {
       const response = await axios.get('/api/loans/dashboard');
-      console.log('Dashboard loans response:', response);
       setIncoming(response.data.incoming);
       setOutgoing(response.data.outgoing);
       setCurrent(response.data.current);
       setHistory(response.data.history);
     } catch (err) {
-      console.error('Error fetching loans:', err);
-      if (err.response) {
-        console.error('Error response data:', err.response.data);
-        console.error('Error response status:', err.response.status);
-        console.error('Error response headers:', err.response.headers);
-      }
       setError('Failed to fetch loans');
     } finally {
       setLoading(false);
