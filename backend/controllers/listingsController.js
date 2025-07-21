@@ -266,7 +266,13 @@ exports.getAllListings = async (req, res) => {
     });
     
     // Add pagination support
-    const page = parseInt(req.query.page) || 1;
+    let page = 1;
+    if (req.query.page !== undefined) {
+      const parsedPage = Number(req.query.page);
+      if (Number.isInteger(parsedPage) && parsedPage > 0) {
+        page = parsedPage;
+      }
+    }
     const limit = parseInt(req.query.limit) || 24;
     const skip = (page - 1) * limit;
     
