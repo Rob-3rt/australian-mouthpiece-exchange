@@ -332,25 +332,26 @@ exports.forgotPassword = async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: 'Email is required.' });
     }
-    
+    // Always use the same message and add a delay to mitigate timing attacks
+    const genericMsg = { message: 'If an account with that email exists, a password reset link has been sent.' };
+    const delay = ms => new Promise(r => setTimeout(r, ms));
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      // Don't reveal if email exists or not for security
-      return res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+      await delay(500);
+      return res.json(genericMsg);
     }
-    
     // Generate reset token (expires in 1 hour)
     const resetToken = jwt.sign(
       { userId: user.user_id, type: 'password_reset' },
       config.jwtSecret,
       { expiresIn: '1h' }
     );
-    
     // Try to send reset email, but don't fail if email config is missing
     try {
       await sendPasswordResetEmail(user, resetToken, req);
       console.log('Password reset email sent successfully to:', user.email);
-      res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+      await delay(500);
+      res.json(genericMsg);
     } catch (emailError) {
       console.error('Failed to send password reset email:', emailError.message);
       console.error('Email config check:', {
@@ -359,13 +360,11 @@ exports.forgotPassword = async (req, res) => {
         smtpPass: config.smtpPass ? 'Set' : 'Not set',
         emailFrom: config.emailFrom ? 'Set' : 'Not set'
       });
-      
       // For development, log the reset token so you can test the flow
       console.log('Password reset token for testing:', resetToken);
       console.log('Reset URL for testing:', `${req.protocol}://${req.get('host').replace('4000', '5173')}/reset-password?token=${resetToken}`);
-      
-      // Don't return an error, just log it and continue
-      res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+      await delay(500);
+      res.json(genericMsg);
     }
   } catch (err) {
     console.error('Forgot password error:', err);
