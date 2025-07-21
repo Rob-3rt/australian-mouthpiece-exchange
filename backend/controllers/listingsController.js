@@ -365,6 +365,13 @@ exports.createListing = async (req, res) => {
     photos: req.body.photos ? `[${Array.isArray(req.body.photos) ? req.body.photos.length : 'not array'}]` : undefined
   });
   try {
+    // Enforce per-user active listing limit
+    const activeCount = await prisma.listing.count({
+      where: { user_id: req.user.userId, status: 'active' }
+    });
+    if (activeCount >= 20) {
+      return res.status(429).json({ error: 'Listing limit reached. You may have up to 20 active listings.' });
+    }
     // Comprehensive field validation
     const fieldValidation = validateListingFields(req.body);
     if (!fieldValidation.valid) {
