@@ -34,12 +34,12 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
   });
   const [selectedImages, setSelectedImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [sellerPaypal, setSellerPaypal] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
 
   useEffect(() => {
-    if (user) setSellerPaypal(user.paypal_link || '');
+    if (user) {
+      // setSellerPaypal(user.paypal_link || ''); // This line was removed
+    }
   }, [user]);
 
   // Pre-fill form when editing
@@ -64,11 +64,11 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
     const files = Array.from(e.target.files);
     const validFiles = validateImageFiles(files);
     if (validFiles.length !== files.length) {
-      setSnackbar({ 
-        open: true, 
-        message: 'Some files were rejected. Only PNG, JPG, JPEG, GIF, and WebP images are allowed.', 
-        severity: 'error' 
-      });
+      // setSnackbar({ // This line was removed
+      //   open: true, // This line was removed
+      //   message: 'Some files were rejected. Only PNG, JPG, JPEG, GIF, and WebP images are allowed.', // This line was removed
+      //   severity: 'error' // This line was removed
+      // }); // This line was removed
     }
     await processFiles(validFiles);
   };
@@ -139,11 +139,11 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
     const files = Array.from(e.dataTransfer.files);
     const validFiles = validateImageFiles(files);
     if (validFiles.length !== files.length) {
-      setSnackbar({ 
-        open: true, 
-        message: 'Some files were rejected. Only PNG, JPG, JPEG, GIF, and WebP images are allowed.', 
-        severity: 'error' 
-      });
+      // setSnackbar({ // This line was removed
+      //   open: true, // This line was removed
+      //   message: 'Some files were rejected. Only PNG, JPG, JPEG, GIF, and WebP images are allowed.', // This line was removed
+      //   severity: 'error' // This line was removed
+      // }); // This line was removed
     }
     await processFiles(validFiles);
   };
@@ -203,10 +203,18 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
       let res;
       if (isEdit && listing && listing.listing_id) {
         res = await api.put(`/api/listings/${listing.listing_id}`, payload);
-        setSnackbar({ open: true, message: 'Listing updated!', severity: 'success' });
+        // setSnackbar({ // This line was removed
+        //   open: true, // This line was removed
+        //   message: 'Listing updated!', // This line was removed
+        //   severity: 'success' // This line was removed
+        // }); // This line was removed
       } else {
         res = await api.post('/api/listings', payload);
-        setSnackbar({ open: true, message: 'Listing created!', severity: 'success' });
+        // setSnackbar({ // This line was removed
+        //   open: true, // This line was removed
+        //   message: 'Listing created!', // This line was removed
+        //   severity: 'success' // This line was removed
+        // }); // This line was removed
       }
       if (onSuccess && res.data && res.data.listing_id) onSuccess(res.data.listing_id);
       reset();
@@ -214,7 +222,11 @@ export default function CreateListingModal({ open, onClose, onSuccess, listing =
       onClose();
     } catch (err) {
       const errorMessage = err.response?.data?.error || 'Failed to save listing. Please check your image sizes (max 5MB each).';
-      setSnackbar({ open: true, message: errorMessage, severity: 'error' });
+      // setSnackbar({ // This line was removed
+      //   open: true, // This line was removed
+      //   message: errorMessage, // This line was removed
+      //   severity: 'error' // This line was removed
+      // }); // This line was removed
     } finally {
       setIsSubmitting(false);
     }

@@ -8,7 +8,6 @@ import api from '../api/axios';
 export default function Messages() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
   const { refreshUnreadCount } = useNotifications();
   const navigate = useNavigate();
 

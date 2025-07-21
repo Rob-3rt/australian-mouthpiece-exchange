@@ -25,7 +25,6 @@ import { useNotifications } from './contexts/NotificationContext';
 import CreateListingModal from './components/CreateListingModal';
 import Footer from './components/Footer';
 import MailIcon from '@mui/icons-material/Mail';
-import api from './api/axios';
 
 function ProtectedRoute({ children }) {
   const { user, loadingUser } = useAuth();
@@ -73,8 +72,6 @@ function NavBar({ onOpenCreateListing }) {
   
   const handleMobileMenu = (event) => setMobileMenuAnchor(event.currentTarget);
   const handleMobileMenuClose = () => setMobileMenuAnchor(null);
-
-  const isActive = (path) => location.pathname === path;
 
   return (
     <AppBar 

@@ -124,11 +124,10 @@ export default function MyListings() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingListing, setEditingListing] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
   const [tab, setTab] = useState('active');
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm({
+  const { reset, setValue } = useForm({
     defaultValues: {
       instrument_type: '',
       brand: '',

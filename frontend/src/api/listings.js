@@ -10,10 +10,5 @@ export async function getListings(filters = {}) {
     }
   });
   const url = `/api/listings${params.toString() ? '?' + params.toString() : ''}`;
-  try {
-    const res = await api.get(url);
-    return res.data;
-  } catch (error) {
-    throw error;
-  }
+  return api.get(url).then(res => res.data);
 } 

@@ -108,7 +108,7 @@ export default function ListingDetails() {
   if (error) return <Alert severity="error">{error}</Alert>;
   if (!listing) return null;
 
-  function getPaypalUrl(paypal, amount) {
+  function getPaypalUrl(paypal) {
     if (!paypal) return '#';
     paypal = paypal.trim();
     if (paypal.startsWith('https://www.paypal.com/paypalme/')) {
@@ -458,7 +458,7 @@ export default function ListingDetails() {
                     {/* PayPal Button or Fallback */}
                     {listing.paypal_link_effective ? (
                       <a
-                        href={getPaypalUrl(listing.paypal_link_effective, listing.price)}
+                        href={getPaypalUrl(listing.paypal_link_effective)}
                         target="_blank"
                         rel="noopener noreferrer"
                         role="button"
