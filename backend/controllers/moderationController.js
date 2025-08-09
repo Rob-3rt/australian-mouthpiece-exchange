@@ -43,7 +43,6 @@ exports.flagContent = async (req, res) => {
 // Get all flagged listings (admin only)
 exports.getAllFlags = async (req, res) => {
   try {
-    // TODO: Add admin check here
     const flags = await prisma.flaggedContent.findMany({
       where: {
         content_type: 'listing'
@@ -91,7 +90,6 @@ exports.deleteFlag = async (req, res) => {
 // Get moderation dashboard (admin only)
 exports.getModerationDashboard = async (req, res) => {
   try {
-    // TODO: Add admin check here
     const pendingFlags = await prisma.flaggedContent.count({ 
       where: { 
         status: 'pending',

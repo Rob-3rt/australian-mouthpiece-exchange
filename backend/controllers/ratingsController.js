@@ -58,7 +58,6 @@ exports.getUserRatings = async (req, res) => {
 // Get ratings for moderation (admin only)
 exports.getModerationRatings = async (req, res) => {
   try {
-    // TODO: Add admin check here
     const ratings = await prisma.peerRating.findMany({
       where: {
         OR: [
@@ -81,7 +80,6 @@ exports.getModerationRatings = async (req, res) => {
 // Publish a rating (admin only)
 exports.publishRating = async (req, res) => {
   try {
-    // TODO: Add admin check here
     const rating = await prisma.peerRating.update({
       where: { rating_id: Number(req.params.id) },
       data: { published: true, reviewed: true }
@@ -97,7 +95,6 @@ exports.publishRating = async (req, res) => {
 // Delete a rating (admin only)
 exports.deleteRating = async (req, res) => {
   try {
-    // TODO: Add admin check here
     const rating = await prisma.peerRating.findUnique({
       where: { rating_id: Number(req.params.id) }
     });

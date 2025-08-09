@@ -108,8 +108,15 @@ export default function Conversation() {
     }
   };
 
-  // Sort messages newest to oldest (descending by timestamp)
-  const sortedMessages = [...messages].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e);
+    }
+  };
+
+  // Sort messages oldest to newest (ascending by timestamp) so new messages appear at bottom
+  const sortedMessages = [...messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
   if (loading) {
     return (
@@ -335,10 +342,14 @@ export default function Conversation() {
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
               fullWidth
-              placeholder="Type your message..."
+              placeholder="Type your message... (Shift+Enter for new line)"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
               disabled={sending}
+              multiline
+              rows={3}
+              maxRows={6}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '24px',
@@ -349,9 +360,9 @@ export default function Conversation() {
                   '&:hover fieldset': {
                     borderColor: '#222222',
                   },
-                                      '&.Mui-focused fieldset': {
-                      borderColor: '#4a1d3f',
-                    },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#4a1d3f',
+                  },
                 },
                 '& .MuiInputBase-input': {
                   padding: '12px 20px',

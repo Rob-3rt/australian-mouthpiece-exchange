@@ -184,7 +184,6 @@ exports.markAsRead = async (req, res) => {
 // Get messages for moderation (admin only)
 exports.getModerationMessages = async (req, res) => {
   try {
-    // TODO: Add admin check here
     const messages = await prisma.message.findMany({
       where: {
         OR: [
