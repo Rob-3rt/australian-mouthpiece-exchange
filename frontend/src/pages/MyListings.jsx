@@ -126,6 +126,7 @@ export default function MyListings() {
   const [editingListing, setEditingListing] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [tab, setTab] = useState('active');
+  const [actionLoading, setActionLoading] = useState(new Set());
 
   const { reset, setValue } = useForm({
     defaultValues: {
@@ -139,6 +140,110 @@ export default function MyListings() {
       open_to_swap: 'false'
     }
   });
+
+  // Define ListingSection component first to avoid hoisting issues
+  const ListingSection = ({ title, listings, status, emptyMessage }) => (
+    <Box mb={6}>
+      <Typography variant="h4" sx={{
+        color: status === 'active' ? '#ff385c' : status === 'paused' ? '#e67e22' : '#717171',
+        fontWeight: 700,
+        mb: 3,
+        letterSpacing: -0.5
+      }}>
+        {title} <span style={{fontWeight:400, color:'#bbb'}}>({listings.length})</span>
+      </Typography>
+      {listings.length === 0 ? (
+        <Box sx={{
+          backgroundColor: '#f7f7f7',
+          borderRadius: '16px',
+          p: 5,
+          textAlign: 'center',
+          border: '1px solid #eee',
+          color: '#717171',
+          fontSize: '18px',
+          fontWeight: 500
+        }}>
+          {emptyMessage}
+        </Box>
+      ) : (
+        <Grid container spacing={4}>
+          {listings.map(listing => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={listing.listing_id}>
+              <Card sx={{
+                border: status === 'paused' ? '2px solid #e67e22' : status === 'sold' ? '2px solid #bbb' : '1px solid #dddddd',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                opacity: status === 'sold' ? 0.7 : 1,
+                transition: 'all 0.2s',
+                boxShadow: 'none',
+                '&:hover': {
+                  boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
+                  borderColor: '#222222',
+                  transform: 'translateY(-2px)'
+                },
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 340
+              }}>
+                <Box sx={{ position: 'relative', width: '100%', height: 200, backgroundColor: '#f7f7f7', overflow: 'hidden' }}>
+                  {listing.photos && listing.photos.length > 0 ? (
+                    <img
+                      src={listing.photos[0]}
+                      alt={listing.brand + ' ' + listing.model}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                  ) : (
+                    <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb', fontSize: '16px' }}>No Image</Box>
+                  )}
+                </Box>
+                <Box sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#222', mb: 1, fontSize: '16px', lineHeight: 1.2 }}>
+                      {listing.brand} {listing.model}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#717171', fontSize: '14px', mb: 1 }}>
+                      {listing.instrument_type} • {listing.condition}
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#222', mb: 1, fontSize: '18px' }}>
+                      ${listing.price}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#717171', fontSize: '14px', mb: 1 }}>
+                      Status: {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
+                    </Typography>
+                  </Box>
+                  {status !== 'sold' && (
+                    <Box mt={2} display="flex" gap={1}>
+                      <IconButton size="small" onClick={() => handleOpenModal(listing)} title="Edit" sx={{ borderRadius: '8px', color: '#222' }}>
+                        <EditIcon />
+                      </IconButton>
+                      {status === 'active' && (
+                        <IconButton size="small" onClick={() => handlePauseToggle(listing)} title="Pause" sx={{ borderRadius: '8px', color: '#e67e22' }}>
+                          <PauseIcon />
+                        </IconButton>
+                      )}
+                      {status === 'paused' && (
+                        <IconButton size="small" onClick={() => handlePauseToggle(listing)} title="Activate" sx={{ borderRadius: '8px', color: '#43a047' }}>
+                          <PlayArrowIcon />
+                        </IconButton>
+                      )}
+                      {status === 'active' && (
+                        <IconButton size="small" onClick={() => handleMarkAsSold(listing)} title="Mark as Sold" sx={{ borderRadius: '8px', color: '#43a047' }}>
+                          <CheckCircleIcon />
+                        </IconButton>
+                      )}
+                      <IconButton size="small" onClick={() => handleDelete(listing)} title="Delete" sx={{ borderRadius: '8px', color: '#ff385c' }}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Box>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Box>
+  );
 
   useEffect(() => {
     fetchMyListings();
@@ -365,109 +470,6 @@ export default function MyListings() {
   const activeListings = myListings.filter(listing => listing.status === 'active');
   const pausedListings = myListings.filter(listing => listing.status === 'paused');
   const soldListings = myListings.filter(listing => listing.status === 'sold');
-
-  const ListingSection = ({ title, listings, status, emptyMessage }) => (
-    <Box mb={6}>
-      <Typography variant="h4" sx={{
-        color: status === 'active' ? '#ff385c' : status === 'paused' ? '#e67e22' : '#717171',
-        fontWeight: 700,
-        mb: 3,
-        letterSpacing: -0.5
-      }}>
-        {title} <span style={{fontWeight:400, color:'#bbb'}}>({listings.length})</span>
-      </Typography>
-      {listings.length === 0 ? (
-        <Box sx={{
-          backgroundColor: '#f7f7f7',
-          borderRadius: '16px',
-          p: 5,
-          textAlign: 'center',
-          border: '1px solid #eee',
-          color: '#717171',
-          fontSize: '18px',
-          fontWeight: 500
-        }}>
-          {emptyMessage}
-        </Box>
-      ) : (
-        <Grid container spacing={4}>
-          {listings.map(listing => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={listing.listing_id}>
-              <Card sx={{
-                border: status === 'paused' ? '2px solid #e67e22' : status === 'sold' ? '2px solid #bbb' : '1px solid #dddddd',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                opacity: status === 'sold' ? 0.7 : 1,
-                transition: 'all 0.2s',
-                boxShadow: 'none',
-                '&:hover': {
-                  boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
-                  borderColor: '#222222',
-                  transform: 'translateY(-2px)'
-                },
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: 340
-              }}>
-                <Box sx={{ position: 'relative', width: '100%', height: 200, backgroundColor: '#f7f7f7', overflow: 'hidden' }}>
-                  {listing.photos && listing.photos.length > 0 ? (
-                    <img
-                      src={listing.photos[0]}
-                      alt={listing.brand + ' ' + listing.model}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                    />
-                  ) : (
-                    <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb', fontSize: '16px' }}>No Image</Box>
-                  )}
-                </Box>
-                <Box sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#222', mb: 1, fontSize: '16px', lineHeight: 1.2 }}>
-                      {listing.brand} {listing.model}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#717171', fontSize: '14px', mb: 1 }}>
-                      {listing.instrument_type} • {listing.condition}
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#222', mb: 1, fontSize: '18px' }}>
-                      ${listing.price}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#717171', fontSize: '14px', mb: 1 }}>
-                      Status: {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
-                    </Typography>
-                  </Box>
-                  {status !== 'sold' && (
-                    <Box mt={2} display="flex" gap={1}>
-                      <IconButton size="small" onClick={() => handleOpenModal(listing)} title="Edit" sx={{ borderRadius: '8px', color: '#222' }}>
-                        <EditIcon />
-                      </IconButton>
-                      {status === 'active' && (
-                        <IconButton size="small" onClick={() => handlePauseToggle(listing)} title="Pause" sx={{ borderRadius: '8px', color: '#e67e22' }}>
-                          <PauseIcon />
-                        </IconButton>
-                      )}
-                      {status === 'paused' && (
-                        <IconButton size="small" onClick={() => handlePauseToggle(listing)} title="Activate" sx={{ borderRadius: '8px', color: '#43a047' }}>
-                          <PlayArrowIcon />
-                        </IconButton>
-                      )}
-                      {status === 'active' && (
-                        <IconButton size="small" onClick={() => handleMarkAsSold(listing)} title="Mark as Sold" sx={{ borderRadius: '8px', color: '#43a047' }}>
-                          <CheckCircleIcon />
-                        </IconButton>
-                      )}
-                      <IconButton size="small" onClick={() => handleDelete(listing)} title="Delete" sx={{ borderRadius: '8px', color: '#ff385c' }}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
-                  )}
-                </Box>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-    </Box>
-  );
 
   return (
     <Box sx={{ backgroundColor: '#fff', minHeight: '100vh', py: { xs: 2, md: 6 } }}>
